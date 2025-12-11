@@ -10,7 +10,7 @@ const SignUp = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
-  const [role, setRole] = useState("user");
+  const [role, setRole] = useState("patient");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -81,7 +81,7 @@ const SignUp = () => {
             onChange={(e) => setRole(e.target.value)}
             className="w-full px-4 py-3 rounded-lg border border-gray-300 outline-none bg-white"
           >
-            <option value="user">Patient</option>
+           <option value="patient">Patient</option>
             <option value="doctor">Doctor</option>
           </select>
           <input
