@@ -1,0 +1,18 @@
+# Dependency directories
+node_modules/
+
+# Environment variables (Crucial security)
+.env
+config.env
+
+# System files
+.DS_Store
+Thumbs.db
+
+# IDE settings
+.vscode/
+.idea/
+
+# Build outputs
+dist/
+build/
