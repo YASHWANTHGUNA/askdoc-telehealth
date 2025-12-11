@@ -38,11 +38,7 @@ export const StreamProvider = ({ children }) => {
   // 2. Login Function (Connects UI to Backend)
   const login = async (email, password) => {
     try {
-      const res = await axios.post(
-        `${API_URL}/users/login`,
-        { email, password },
-        { withCredentials: true } // IMPORTANT: This sets the httpOnly cookie
-      );
+      const res = await axios.post(`${API_URL}/users/login`, { email, password }, { withCredentials: true });
 
       if (res.data.status === "success") {
         setUser(res.data.user);
