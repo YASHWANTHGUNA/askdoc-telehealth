@@ -28,6 +28,11 @@ app.use("/api/v1/users", userRouter);
 app.use("/api/v1/stream", streamRouter);
 app.use("/api/v1/appointments", appointmentRouter); // ✅ Route Mounted
 
+// A simple route for the homepage
+app.get("/", (req, res) => {
+  res.status(200).send("Telehealth API is running successfully! 🚀");
+});
+
 // 1. Handle Unhandled Routes (404)
 // Use '/*' so path-to-regexp parses the wildcard correctly
 app.all(/(.*)/, (req, res, next) => {
