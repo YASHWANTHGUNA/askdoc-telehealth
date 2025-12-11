@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -26,19 +25,18 @@ const Login = () => {
       });
 
       if (res.data.status === "success") {
-        // ✅ 2. Save Token & User Data to LocalStorage
         localStorage.setItem("token", res.data.token);
         localStorage.setItem("user", JSON.stringify(res.data.user));
         
-        // Optional: Save Stream Token if you use video later
+        // Optional: Save stream token
         if (res.data.streamToken) {
             localStorage.setItem("streamToken", res.data.streamToken);
         }
 
-        alert("Login Successful!");
+        alert("Login Successful! Taking you to Dashboard...");
 
-        // ✅ 3. REDIRECT TO DASHBOARD
-        navigate("/dashboard");
+        // 🛑 FORCE RELOAD TO DASHBOARD (The Nuclear Option)
+        window.location.href = "/dashboard"; 
       }
     } catch (err) {
       console.error("Login Error:", err);
