@@ -1,7 +1,5 @@
-const nodemailer = require('nodemailer');
-
+// 🛑 BYPASS MODE: No real email sending
 const sendEmail = async (options) => {
-  // 🛑 BYPASS MODE: Gmail is blocking us, so we log the email instead.
   console.log("============================================");
   console.log("📧 EMAIL SYSTEM (BYPASS MODE) 📧");
   console.log(`To: ${options.email}`);
@@ -11,28 +9,8 @@ const sendEmail = async (options) => {
   console.log(options.html); 
   console.log("============================================");
 
-  // We return "Promise.resolve()" to tell the controller "Success!"
+  // Return a resolved promise so the app thinks it worked
   return Promise.resolve();
-};
-
-module.exports = sendEmail;
-
-  // 2. Define the email options
-  const mailOptions = {
-    from: `Telehealth App <${process.env.EMAIL_USER}>`,
-    to: options.email,
-    subject: options.subject,
-    html: options.html,
-  };
-
-  // 3. Send the email
-  try {
-    const info = await transporter.sendMail(mailOptions);
-    console.log("✅ EMAIL SENT SUCCESS:", info.messageId);
-  } catch (err) {
-    console.error("❌ EMAIL SEND FAILED:", err);
-    throw err; // Pass error up so the frontend sees it
-  }
 };
 
 module.exports = sendEmail;
