@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-// 1. IMPORT THE API URL FROM CONTEXT OR DEFINE IT
-// Since we want to keep it simple, let's use the same URL logic
+
+// ✅ FORCE THE CORRECT RENDER URL (No more localhost!)
 const API_URL = "https://askdoc-telehealth.onrender.com/api/v1";
 
 const SignUp = () => {
@@ -22,7 +22,8 @@ const SignUp = () => {
     setLoading(true);
 
     try {
-      // 2. USE THE CORRECT RENDER URL HERE
+      console.log("🚀 Sending Request to:", API_URL); // Debug Log
+
       const res = await axios.post(`${API_URL}/users/signup`, {
         name,
         email,
@@ -32,12 +33,12 @@ const SignUp = () => {
       });
 
       if (res.data.status === "success") {
-        // Redirect to Verification Page or Login
-        navigate("/verify"); 
+        alert("Account Created Successfully! Please Login.");
+        navigate("/login");
       }
     } catch (err) {
-      console.error(err);
-      setError(err.response?.data?.message || "Something went wrong!");
+      console.error("Signup Error:", err);
+      setError(err.response?.data?.message || "Connection failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -55,75 +56,22 @@ const SignUp = () => {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <input
-              type="text"
-              placeholder="Full Name"
-              required
-              className="w-full px-4 py-3 rounded-lg border border-gray-300 outline-none focus:border-blue-500"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-          </div>
-          
-          <div>
-            <input
-              type="email"
-              placeholder="Email Address"
-              required
-              className="w-full px-4 py-3 rounded-lg border border-gray-300 outline-none focus:border-blue-500"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
+          <input type="text" placeholder="Full Name" required className="w-full px-4 py-3 rounded-lg border border-gray-300 outline-none" value={name} onChange={(e) => setName(e.target.value)} />
+          <input type="email" placeholder="Email Address" required className="w-full px-4 py-3 rounded-lg border border-gray-300 outline-none" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <select value={role} onChange={(e) => setRole(e.target.value)} className="w-full px-4 py-3 rounded-lg border border-gray-300 outline-none bg-white">
+             <option value="user">Patient</option>
+             <option value="doctor">Doctor</option>
+          </select>
+          <input type="password" placeholder="Password" required className="w-full px-4 py-3 rounded-lg border border-gray-300 outline-none" value={password} onChange={(e) => setPassword(e.target.value)} />
+          <input type="password" placeholder="Confirm Password" required className="w-full px-4 py-3 rounded-lg border border-gray-300 outline-none" value={passwordConfirm} onChange={(e) => setPasswordConfirm(e.target.value)} />
 
-          <div>
-             <select 
-               value={role} 
-               onChange={(e) => setRole(e.target.value)}
-               className="w-full px-4 py-3 rounded-lg border border-gray-300 outline-none focus:border-blue-500 bg-white"
-             >
-               <option value="user">Patient</option>
-               <option value="doctor">Doctor</option>
-             </select>
-          </div>
-
-          <div>
-            <input
-              type="password"
-              placeholder="Password"
-              required
-              className="w-full px-4 py-3 rounded-lg border border-gray-300 outline-none focus:border-blue-500"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
-
-          <div>
-            <input
-              type="password"
-              placeholder="Confirm Password"
-              required
-              className="w-full px-4 py-3 rounded-lg border border-gray-300 outline-none focus:border-blue-500"
-              value={passwordConfirm}
-              onChange={(e) => setPasswordConfirm(e.target.value)}
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition"
-          >
+          <button type="submit" disabled={loading} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition">
             {loading ? "Creating Account..." : "Sign Up"}
           </button>
         </form>
 
         <p className="mt-6 text-center text-gray-600">
-          Already have an account?{" "}
-          <Link to="/login" className="text-blue-600 hover:text-blue-800 font-semibold">
-            Sign In
-          </Link>
+          Already have an account? <Link to="/login" className="text-blue-600 hover:text-blue-800 font-semibold">Sign In</Link>
         </p>
       </div>
     </div>
