@@ -1,17 +1,25 @@
-import React, { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 
-const VerifyAccount = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  // Get the email passed from the SignUp page (or empty string if accessed directly)
-  const emailFromSignup = location.state?.email || "";
+// ✅ FORCE THE CORRECT RENDER URL
+const API_URL = "https://askdoc-telehealth.onrender.com/api/v1";
 
+const VerifyAccount = () => {
   const [otp, setOtp] = useState("");
-  const [email, setEmail] = useState(emailFromSignup); // Allow user to edit email if needed
+  const [email, setEmail] = useState(""); // We will get this from the previous page
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Auto-fill email if passed from SignUp page
+  useEffect(() => {
+    if (location.state && location.state.email) {
+      setEmail(location.state.email);
+    }
+  }, [location]);
 
   const handleVerify = async (e) => {
     e.preventDefault();
@@ -19,73 +27,64 @@ const VerifyAccount = () => {
     setError("");
 
     try {
-      // 1. Send OTP to Backend
-      const res = await axios.post("http://localhost:8000/api/v1/users/verifyOTP", {
+      // ✅ Using the Render URL instead of localhost
+      const res = await axios.post(`${API_URL}/users/verifyOTP`, {
         email,
-        otp
+        otp,
       });
 
-      // 2. If success, redirect to Login
       if (res.data.status === "success") {
-        alert("Account verified! Please log in.");
-        navigate("/login");
+        alert("Verification Successful! Logging you in...");
+        // Redirect to Dashboard or Login
+        navigate("/login"); 
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Verification failed");
+      console.error("Verification Error:", err);
+      setError(err.response?.data?.message || "Verification failed. Check OTP.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-lg">
-        <div className="text-center">
-          <h2 className="text-3xl font-extrabold text-gray-900">Verify Account</h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Check your email for the 6-digit code.
-          </p>
-        </div>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
+        <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">
+          Verify Account
+        </h2>
+        <p className="text-center text-gray-500 mb-6">
+          Check your Render Logs for the 6-digit code.
+        </p>
 
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative text-sm">
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-sm">
             {error}
           </div>
         )}
 
-        <form className="mt-8 space-y-6" onSubmit={handleVerify}>
-          <div className="rounded-md shadow-sm space-y-4">
-            <div>
-              <label htmlFor="email" className="sr-only">Email</label>
-              <input
-                id="email"
-                type="email"
-                required
-                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                placeholder="Confirm your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            <div>
-              <label htmlFor="otp" className="sr-only">OTP Code</label>
-              <input
-                id="otp"
-                type="text"
-                required
-                maxLength="6"
-                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm tracking-widest text-center text-2xl"
-                placeholder="123456"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value)}
-              />
-            </div>
-          </div>
+        <form onSubmit={handleVerify} className="space-y-4">
+          <input
+            type="email"
+            placeholder="Your Email"
+            required
+            className="w-full px-4 py-3 rounded-lg border border-gray-300 outline-none"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <input
+            type="text"
+            placeholder="Enter 6-digit OTP"
+            required
+            maxLength="6"
+            className="w-full px-4 py-3 rounded-lg border border-gray-300 outline-none text-center text-2xl tracking-widest"
+            value={otp}
+            onChange={(e) => setOtp(e.target.value)}
+          />
 
           <button
             type="submit"
             disabled={loading}
-            className={`w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${loading ? "opacity-70 cursor-not-allowed" : ""}`}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition"
           >
             {loading ? "Verifying..." : "Verify Code"}
           </button>
