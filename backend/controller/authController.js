@@ -3,7 +3,7 @@ const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/appError");
 const sendEmail = require("../utils/email");
 const jwt = require("jsonwebtoken");
-const { StreamChat } = require("stream-chat"); // <--- Added Import
+const { StreamChat } = require("stream-chat"); 
 
 // Helper to create JWT Token
 const signToken = (id) => {
@@ -12,7 +12,7 @@ const signToken = (id) => {
   });
 };
 
-// SIGNUP FUNCTION
+// SIGNUP FUNCTION (DEBUG VERSION)
 exports.signup = catchAsync(async (req, res, next) => {
   const newUser = await User.create({
     name: req.body.name,
@@ -48,11 +48,20 @@ exports.signup = catchAsync(async (req, res, next) => {
     });
 
   } catch (err) {
+    // 🔍 DEBUGGING BLOCK: This sends the REAL error to your browser
+    console.error("💥 SIGNUP EMAIL ERROR:", err);
+    
+    // We clean up the user so you can try again
     newUser.otp = undefined;
     newUser.otpExpires = undefined;
     await newUser.save({ validateBeforeSave: false });
 
-    return next(new AppError('There was an error sending the email. Try again later!'), 500);
+    // Send the actual error message to the Frontend
+    return res.status(500).json({
+      status: "error",
+      message: err.message,  // <--- THIS IS THE KEY
+      stack: err.stack       // <--- Extra detail
+    });
   }
 });
 
@@ -95,7 +104,7 @@ exports.verifyAccount = catchAsync(async (req, res, next) => {
   });
 });
 
-// LOGIN FUNCTION (UPDATED)
+// LOGIN FUNCTION
 exports.login = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
 
@@ -119,7 +128,7 @@ exports.login = catchAsync(async (req, res, next) => {
   // 4. Generate JWT (For Backend Access)
   const token = signToken(user._id);
 
-  // 5. Generate Stream Token (For Video Access) <--- NEW PART
+  // 5. Generate Stream Token (For Video Access)
   const serverClient = StreamChat.getInstance(
     process.env.STREAM_API_KEY,
     process.env.STREAM_API_SECRET
@@ -137,7 +146,7 @@ exports.login = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: "success",
     token,         
-    streamToken,    // <--- Sending this to frontend
+    streamToken,    
     user: {
       id: user._id,
       name: user.name,
@@ -150,13 +159,11 @@ exports.login = catchAsync(async (req, res, next) => {
 
 exports.restrictTo = (...roles) => {
   return (req, res, next) => {
-    // roles ['admin', 'lead-guide']. role='user'
     if (!roles.includes(req.user.role)) {
       return next(
         new AppError("You do not have permission to perform this action", 403)
       );
     }
-
     next();
   };
 };
