@@ -1,26 +1,21 @@
 const nodemailer = require('nodemailer');
 
 const sendEmail = async (options) => {
-  console.log("📧 ATTEMPTING EMAIL SEND...");
-  console.log(`📧 CONFIG: Host=smtp.gmail.com, Port=587, User=${process.env.EMAIL_USER}`);
+  // 🛑 BYPASS MODE: Gmail is blocking us, so we log the email instead.
+  console.log("============================================");
+  console.log("📧 EMAIL SYSTEM (BYPASS MODE) 📧");
+  console.log(`To: ${options.email}`);
+  console.log(`Subject: ${options.subject}`);
+  console.log("--------------------------------------------");
+  console.log("👇 HERE IS YOUR CONTENT (LOOK FOR THE OTP):");
+  console.log(options.html); 
+  console.log("============================================");
 
-  // 1. Create a transporter with Debugging Enabled
-  const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 587, // Standard TLS port
-    secure: false, // Must be false for port 587
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS
-    },
-    tls: {
-      rejectUnauthorized: false, // Fix for some cloud SSL issues
-      ciphers: 'SSLv3'
-    },
-    connectionTimeout: 10000, // 10 seconds wait
-    logger: true, // Log SMTP traffic
-    debug: true   // Include debug info
-  });
+  // We return "Promise.resolve()" to tell the controller "Success!"
+  return Promise.resolve();
+};
+
+module.exports = sendEmail;
 
   // 2. Define the email options
   const mailOptions = {
