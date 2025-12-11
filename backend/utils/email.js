@@ -1,12 +1,18 @@
 const nodemailer = require('nodemailer');
 
 const sendEmail = async (options) => {
-  // 1. Create a transporter
+  // 1. Create a transporter (Using Port 587 to avoid Timeouts)
   const transporter = nodemailer.createTransport({
-    service: 'Gmail',
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false, // true for 465, false for other ports
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS
+    },
+    // Fix for some cloud environments
+    tls: {
+      ciphers: 'SSLv3'
     }
   });
 
