@@ -2,6 +2,8 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import axios from "axios";
 //This is the correct line
 const API_URL = "https://askdoc-telehealth.onrender.com/api/v1";
+// ✅ 2. CACHE BUSTER LOG (This forces a new file build)
+console.log("🔥 APP RELOADED - V1.5 - Target URL:", API_URL);
 
 export const StreamContext = createContext();
 
