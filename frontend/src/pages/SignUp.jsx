@@ -33,8 +33,11 @@ const SignUp = () => {
       });
 
       if (res.data.status === "success") {
-        alert("Account Created Successfully! Please Login.");
-        navigate("/login");
+        // ✅ 1. Show the success message
+        alert("Account Created! Your OTP is in the Render Logs.");
+        
+        // ✅ 2. Navigate to Verify (NOT Login) and pass the email
+        navigate("/verify", { state: { email: email } });
       }
     } catch (err) {
       console.error("Signup Error:", err);
