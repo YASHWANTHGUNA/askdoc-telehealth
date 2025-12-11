@@ -17,8 +17,8 @@ const app = express();
 app.use(
   cors({
     origin: [
-      "http://localhost:5173",                     // Keep this for local testing
-      "https://askdoc-telehealth.vercel.app/"      // Vercel deployment domain
+      "http://localhost:5173",
+      "https://askdoc-telehealth.vercel.app", // ❌ Remove the '/' at the end
     ],
     credentials: true,
   })
