@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import axios from "axios";
 //This is the correct line
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
+const API_URL = "https://askdoc-telehealth.onrender.com/api/v1";
 
 export const StreamContext = createContext();
 
