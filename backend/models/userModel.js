@@ -28,6 +28,10 @@ const userSchema = new mongoose.Schema({
   height: String,
   weight: String,
   medicalBio: String,
+  photo: {
+    type: String,
+    default: "default" 
+  },
   // 👆 END NEW FIELDS
   password: {
     type: String,
