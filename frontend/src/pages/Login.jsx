@@ -25,17 +25,16 @@ const Login = () => {
       });
 
       if (res.data.status === "success") {
+        // 1. Save all necessary tokens
         localStorage.setItem("token", res.data.token);
         localStorage.setItem("user", JSON.stringify(res.data.user));
         
-        // Optional: Save stream token
+        // 🛑 CRITICAL: SAVE THE STREAM TOKEN
         if (res.data.streamToken) {
-            localStorage.setItem("streamToken", res.data.streamToken);
+            localStorage.setItem("streamToken", res.data.streamToken); // <-- ADD THIS LINE!
         }
 
-        alert("Login Successful! Taking you to Dashboard...");
-
-        // 🛑 FORCE RELOAD TO DASHBOARD (The Nuclear Option)
+        alert("Login Successful!");
         window.location.href = "/dashboard"; 
       }
     } catch (err) {
