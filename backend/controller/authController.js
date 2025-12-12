@@ -6,11 +6,13 @@ const { StreamChat } = require("stream-chat"); // Import StreamChat
 
 // Get Environment Variables for Stream
 const STREAM_API_KEY = process.env.STREAM_API_KEY; 
-const STREAM_SECRET = process.env.STREAM_SECRET; 
+// 👇 CRITICAL FIX: Use STREAM_API_SECRET to match Render's Environment
+const STREAM_SECRET = process.env.STREAM_API_SECRET; 
 
 // Initialize StreamChat client (only if keys exist)
 let streamChat = null;
 if (STREAM_API_KEY && STREAM_SECRET) {
+  // This will now correctly initialize because the variable names match the environment
   streamChat = new StreamChat(STREAM_API_KEY, STREAM_SECRET);
 }
 
@@ -21,11 +23,7 @@ const signToken = (id) => {
   });
 };
 
-// Helper: Send Token Response (This is not used in your provided code, keeping for context)
-// const createSendToken = (user, statusCode, res) => { /* ... */ };
-
-
-// 1. SIGNUP (Keeping your original logic for OTP)
+// 1. SIGNUP
 exports.signup = async (req, res, next) => {
   try {
     const newUser = await User.create({
@@ -82,7 +80,7 @@ exports.signup = async (req, res, next) => {
   }
 };
 
-// 2. VERIFY OTP (Keeping your original logic)
+// 2. VERIFY OTP
 exports.verifyOTP = async (req, res, next) => {
   try {
     const { email, otp } = req.body;
@@ -103,11 +101,12 @@ exports.verifyOTP = async (req, res, next) => {
 
     const token = signToken(user._id);
     
-    // 👇 CRITICAL: GENERATE STREAM TOKEN ON SUCCESSFUL VERIFICATION
+    // 👇 GENERATE STREAM TOKEN ON SUCCESSFUL VERIFICATION
     let streamToken;
     try {
         if (streamChat) {
-            streamToken = streamChat.createToken(user.id);
+            // Using user.id as this is the standard ID the frontend expects after mapping
+            streamToken = streamChat.createToken(user.id); 
         }
     } catch (e) {
         console.error("Stream Token Generation Failed on Verify:", e);
@@ -125,7 +124,7 @@ exports.verifyOTP = async (req, res, next) => {
   }
 };
 
-// 3. LOGIN (The final, corrected version)
+// 3. LOGIN 
 exports.login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
@@ -146,7 +145,7 @@ exports.login = async (req, res, next) => {
 
     const token = signToken(user._id);
 
-    // 👇 CRITICAL: GENERATE STREAM TOKEN HERE
+    // 👇 GENERATE STREAM TOKEN ON SUCCESSFUL LOGIN
     let streamToken;
     try {
         if (streamChat) {
@@ -155,7 +154,6 @@ exports.login = async (req, res, next) => {
         }
     } catch (e) {
         console.error("Stream Token Generation Failed on Login:", e);
-        // If it fails, streamToken remains undefined, but the app won't crash
     }
     // 👆 END CRITICAL
 
