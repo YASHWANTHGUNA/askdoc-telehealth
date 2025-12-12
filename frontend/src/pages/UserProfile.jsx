@@ -55,14 +55,15 @@ const UserProfile = () => {
       reader.readAsDataURL(file);
     }
   };
-
   const handleSave = async () => {
   try {
     const res = await axios.patch(`${API_URL}/users/update-profile`, {
-      // FIX 2: Use user._id instead of user.id
-      userId: user._id, 
+      // ✅ FIX 4: Use user.id instead of user._id
+      userId: user.id, 
       ...formData
     });
+
+  
       const updatedUser = { ...user, ...res.data.data };
       localStorage.setItem("user", JSON.stringify(updatedUser));
       setUser(updatedUser);

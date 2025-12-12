@@ -17,19 +17,18 @@ const MyAppointments = () => {
   // 2. Use your live Render URL
   const API_URL = "https://askdoc-telehealth.onrender.com/api/v1";
 
-  useEffect(() => {
+ useEffect(() => {
     const fetchAppointments = async () => {
-      // 🛑 CRITICAL CHECK: Use user._id (since MongoDB uses _id)
-      if (!user || !user._id) {
+      // ✅ FIX 1: Change check back to user.id
+      if (!user || !user.id) {
         setLoading(false);
-        // Do not crash the app, just show no appointments or redirect if necessary
         return; 
       }
       
       try {
-        // 🛑 CRITICAL FIX: Use the correct API route and user ID
+        // ✅ FIX 2: Pass user.id to the API
         const response = await axios.get(
-          `${API_URL}/appointments/my-appointments/${user._id}`
+          `${API_URL}/appointments/my-appointments/${user.id}` 
         );
         
         // The appointments are likely in response.data.data

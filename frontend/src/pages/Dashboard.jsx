@@ -23,10 +23,12 @@ const Dashboard = () => {
         setUser(parsedUser);
         
         // 👇 DYNAMIC DATA FETCHING
-        if (parsedUser.role === 'patient') {
-            axios.get(`${API_URL}/appointments/my-appointments/${parsedUser.id}`)
-              .then(res => setApptCount(res.data.data.length))
-              .catch(err => console.log(err));
+       // FETCH APPOINTMENTS COUNT
+      if (parsedUser.role === 'patient') {
+          // ✅ FIX 3: Use parsedUser.id
+          axios.get(`${API_URL}/appointments/my-appointments/${parsedUser.id}`)
+            .then(res => setApptCount(res.data.data.length))
+            .catch(err => console.log(err));
         } else {
             // DOCTOR: Fetch Stats
             axios.get(`${API_URL}/appointments/doctor-stats/${parsedUser.name}`)
