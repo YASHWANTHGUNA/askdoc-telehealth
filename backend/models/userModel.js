@@ -24,6 +24,10 @@ const userSchema = new mongoose.Schema({
   address: String,
   gender: String,
   dob: Date,
+  bloodGroup: String,
+  height: String,
+  weight: String,
+  medicalBio: String,
   // 👆 END NEW FIELDS
   password: {
     type: String,
