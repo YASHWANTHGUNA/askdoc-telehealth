@@ -19,16 +19,18 @@ const MyAppointments = () => {
 
  useEffect(() => {
     const fetchAppointments = async () => {
-      // ✅ FIX 1: Change check back to user.id
-      if (!user || !user.id) {
+      // 🛑 CRITICAL FIX: Safely determine the ID and then check it
+      const userId = user?.id || user?._id; 
+
+      if (!userId) {
         setLoading(false);
         return; 
       }
       
       try {
-        // ✅ FIX 2: Pass user.id to the API
+        // Use the safely determined userId for the API call
         const response = await axios.get(
-          `${API_URL}/appointments/my-appointments/${user.id}` 
+          `${API_URL}/appointments/my-appointments/${userId}` 
         );
         
         // The appointments are likely in response.data.data

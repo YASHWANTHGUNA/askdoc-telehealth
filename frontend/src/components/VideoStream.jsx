@@ -47,13 +47,14 @@ const VideoStream = () => {
         const myClient = new StreamVideoClient({
             apiKey,
             user: {
-                id: authData.user.id,
+                // 👇 CRITICAL FIX: Ensure Stream gets a valid ID from EITHER property
+                id: authData.user.id || authData.user._id, 
+                // 👆 END CRITICAL FIX
                 name: authData.user.name,
-                image: authData.user.photo || undefined, // Use photo if available
+                image: authData.user.photo || undefined,
             },
-            token: authData.streamToken, // Use the token from Local Storage
+            token: authData.streamToken,
         });
-
         setClient(myClient);
 
         return () => {
