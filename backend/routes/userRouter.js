@@ -19,5 +19,14 @@ router.patch("/update-profile", async (req, res) => {
     res.status(400).json({ status: "fail", message: err.message });
   }
 });
+router.get("/doctors", async (req, res) => {
+  try {
+    // Find all users where role is 'doctor'
+    const doctors = await User.find({ role: "doctor" });
+    res.status(200).json({ status: "success", data: doctors });
+  } catch (err) {
+    res.status(400).json({ status: "fail", message: err.message });
+  }
+});
 
 module.exports = router;

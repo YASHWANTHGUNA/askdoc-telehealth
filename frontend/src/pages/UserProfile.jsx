@@ -4,18 +4,13 @@ import axios from "axios";
 
 const UserProfile = () => {
   const [user, setUser] = useState({});
-  const [preview, setPreview] = useState(null); // For showing the image instantly
+  const [preview, setPreview] = useState(null);
   const [formData, setFormData] = useState({
-    email: "", 
-    phone: "",
-    address: "",
-    gender: "",
-    dob: "",
-    bloodGroup: "", 
-    height: "",     
-    weight: "",     
-    medicalBio: "",
-    photo: "" // Store Base64 string here
+    email: "", phone: "", address: "", gender: "", dob: "", photo: "",
+    // Patient Fields
+    bloodGroup: "", height: "", weight: "", medicalBio: "",
+    // Doctor Fields
+    specialty: "", experience: "", consultationFee: "", aboutDoctor: ""
   });
 
   const API_URL = "https://askdoc-telehealth.onrender.com/api/v1";
@@ -31,33 +26,31 @@ const UserProfile = () => {
         address: storedUser.address || "",
         gender: storedUser.gender || "",
         dob: storedUser.dob ? storedUser.dob.split('T')[0] : "",
+        photo: storedUser.photo || "",
+        // Patient
         bloodGroup: storedUser.bloodGroup || "",
         height: storedUser.height || "",
         weight: storedUser.weight || "",
         medicalBio: storedUser.medicalBio || "",
-        photo: storedUser.photo || ""
+        // Doctor
+        specialty: storedUser.specialty || "",
+        experience: storedUser.experience || "",
+        consultationFee: storedUser.consultationFee || "",
+        aboutDoctor: storedUser.aboutDoctor || ""
       });
     }
   }, []);
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  // 📸 NEW: Handle Image Upload
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Limit file size to 70KB to prevent Database errors
-      if (file.size > 70000) {
-        alert("File too large! Please choose a smaller image (under 70KB).");
-        return;
-      }
-      
+      if (file.size > 70000) { alert("File too big (Max 70KB)"); return; }
       const reader = new FileReader();
       reader.onloadend = () => {
-        setPreview(reader.result); // Show visual preview
-        setFormData({ ...formData, photo: reader.result }); // Save string to form
+        setPreview(reader.result);
+        setFormData({ ...formData, photo: reader.result });
       };
       reader.readAsDataURL(file);
     }
@@ -69,14 +62,12 @@ const UserProfile = () => {
         userId: user.id,
         ...formData
       });
-      
       const updatedUser = { ...user, ...res.data.data };
       localStorage.setItem("user", JSON.stringify(updatedUser));
       setUser(updatedUser);
       alert("Profile Updated Successfully!");
     } catch (err) {
-      console.error(err);
-      alert("Failed to update profile. (Image might be too big)");
+      alert("Failed to update.");
     }
   };
 
@@ -85,117 +76,59 @@ const UserProfile = () => {
       <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-3xl">
         {/* HEADER */}
         <div className="flex items-center gap-6 mb-8 border-b pb-6">
-          
-          {/* 📸 PROFILE PICTURE AREA */}
           <div className="relative group">
-            <div className="h-24 w-24 rounded-full overflow-hidden border-4 border-blue-100 shadow-sm flex items-center justify-center bg-blue-600 text-white text-3xl font-bold uppercase">
-              {preview ? (
-                <img src={preview} alt="Profile" className="h-full w-full object-cover" />
-              ) : (
-                user.name?.charAt(0)
-              )}
+            <div className="h-24 w-24 rounded-full overflow-hidden border-4 border-blue-100 flex items-center justify-center bg-blue-600 text-white text-3xl font-bold uppercase">
+              {preview ? <img src={preview} className="h-full w-full object-cover"/> : user.name?.charAt(0)}
             </div>
-            
-            {/* HIDDEN INPUT & OVERLAY */}
             <label className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 flex items-center justify-center rounded-full cursor-pointer transition-all">
               <span className="text-white opacity-0 group-hover:opacity-100 font-bold text-xs">Change</span>
-              <input 
-                type="file" 
-                accept="image/*" 
-                className="hidden" 
-                onChange={handleImageUpload} 
-              />
+              <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
             </label>
           </div>
-
           <div>
             <h1 className="text-2xl font-bold">{user.name}</h1>
             <p className="text-gray-500">{user.email}</p>
-            <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full uppercase font-bold mt-2 inline-block">
-              {user.role}
-            </span>
+            <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full uppercase font-bold mt-2 inline-block">{user.role}</span>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          
-          {/* SECTION 1: CONTACT INFO */}
-          <div className="md:col-span-2">
-            <h2 className="text-lg font-bold text-gray-700 mb-4">Contact Information</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-gray-700 text-sm font-bold mb-2">Email (Read Only)</label>
-                <input name="email" value={formData.email} disabled className="w-full p-3 border rounded bg-gray-100 text-gray-500 cursor-not-allowed" />
-              </div>
-              <div>
-                <label className="block text-gray-700 text-sm font-bold mb-2">Phone Number</label>
-                <input name="phone" value={formData.phone} onChange={handleChange} className="w-full p-3 border rounded focus:ring-2 focus:ring-blue-500 outline-none" placeholder="+91 98765 43210" />
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-gray-700 text-sm font-bold mb-2">Address</label>
-                <input name="address" value={formData.address} onChange={handleChange} className="w-full p-3 border rounded focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Street, City, State" />
-              </div>
-            </div>
-          </div>
-
-          {/* SECTION 2: PERSONAL DETAILS */}
-          <div className="md:col-span-2 mt-4">
-            <h2 className="text-lg font-bold text-gray-700 mb-4">Personal Details</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-gray-700 text-sm font-bold mb-2">Gender</label>
-                <select name="gender" value={formData.gender} onChange={handleChange} className="w-full p-3 border rounded">
-                  <option value="">Select</option>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-gray-700 text-sm font-bold mb-2">Date of Birth</label>
-                <input name="dob" type="date" value={formData.dob} onChange={handleChange} className="w-full p-3 border rounded" />
-              </div>
-              <div>
-                <label className="block text-gray-700 text-sm font-bold mb-2">Blood Group</label>
-                <select name="bloodGroup" value={formData.bloodGroup} onChange={handleChange} className="w-full p-3 border rounded">
-                  <option value="">Select</option>
-                  <option value="A+">A+</option>
-                  <option value="A-">A-</option>
-                  <option value="B+">B+</option>
-                  <option value="B-">B-</option>
-                  <option value="O+">O+</option>
-                  <option value="O-">O-</option>
-                  <option value="AB+">AB+</option>
-                  <option value="AB-">AB-</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* SECTION 3: MEDICAL SNAPSHOT */}
-          <div className="md:col-span-2 mt-4">
-            <h2 className="text-lg font-bold text-gray-700 mb-4">Medical Snapshot</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className="block text-gray-700 text-sm font-bold mb-2">Height (cm)</label>
-                <input name="height" value={formData.height} onChange={handleChange} className="w-full p-3 border rounded" placeholder="175" />
-              </div>
-              <div>
-                <label className="block text-gray-700 text-sm font-bold mb-2">Weight (kg)</label>
-                <input name="weight" value={formData.weight} onChange={handleChange} className="w-full p-3 border rounded" placeholder="70" />
-              </div>
-            </div>
-            <div>
-              <label className="block text-gray-700 text-sm font-bold mb-2">Current Medical Conditions / Allergies</label>
-              <textarea name="medicalBio" value={formData.medicalBio} onChange={handleChange} rows="3" className="w-full p-3 border rounded focus:ring-2 focus:ring-blue-500 outline-none" placeholder="E.g., Diabetic, Peanut Allergy, Asthma..." />
-            </div>
-          </div>
-
+        {/* COMMON FIELDS */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div><label className="block text-gray-700 font-bold mb-2">Phone</label><input name="phone" value={formData.phone} onChange={handleChange} className="w-full p-3 border rounded" /></div>
+            <div><label className="block text-gray-700 font-bold mb-2">Address</label><input name="address" value={formData.address} onChange={handleChange} className="w-full p-3 border rounded" /></div>
         </div>
 
-        <button onClick={handleSave} className="w-full mt-8 bg-blue-600 text-white py-4 rounded-lg font-bold hover:bg-blue-700 transition shadow-lg">
-          Save Profile Changes
-        </button>
+        {/* CONDITIONAL FIELDS */}
+        {user.role === 'patient' ? (
+            <div className="bg-blue-50 p-4 rounded-lg">
+                <h2 className="text-lg font-bold mb-4">Patient Medical Details</h2>
+                <div className="grid grid-cols-2 gap-4">
+                    <div><label className="block font-bold mb-2">Blood Group</label><input name="bloodGroup" value={formData.bloodGroup} onChange={handleChange} className="w-full p-2 border rounded" /></div>
+                    <div><label className="block font-bold mb-2">Height</label><input name="height" value={formData.height} onChange={handleChange} className="w-full p-2 border rounded" /></div>
+                    <div className="col-span-2"><label className="block font-bold mb-2">Medical Bio</label><textarea name="medicalBio" value={formData.medicalBio} onChange={handleChange} className="w-full p-2 border rounded" /></div>
+                </div>
+            </div>
+        ) : (
+            <div className="bg-green-50 p-4 rounded-lg">
+                <h2 className="text-lg font-bold mb-4">Doctor Professional Details</h2>
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <label className="block font-bold mb-2">Specialty</label>
+                        <select name="specialty" value={formData.specialty} onChange={handleChange} className="w-full p-2 border rounded">
+                            <option value="">Select</option>
+                            <option value="Cardiologist">Cardiologist</option>
+                            <option value="Dermatologist">Dermatologist</option>
+                            <option value="General">General Physician</option>
+                        </select>
+                    </div>
+                    <div><label className="block font-bold mb-2">Experience (Years)</label><input name="experience" value={formData.experience} onChange={handleChange} className="w-full p-2 border rounded" /></div>
+                    <div><label className="block font-bold mb-2">Fee ($)</label><input name="consultationFee" type="number" value={formData.consultationFee} onChange={handleChange} className="w-full p-2 border rounded" /></div>
+                    <div className="col-span-2"><label className="block font-bold mb-2">About Me</label><textarea name="aboutDoctor" value={formData.aboutDoctor} onChange={handleChange} className="w-full p-2 border rounded" /></div>
+                </div>
+            </div>
+        )}
+
+        <button onClick={handleSave} className="w-full mt-8 bg-blue-600 text-white py-4 rounded-lg font-bold hover:bg-blue-700 transition">Save Profile</button>
       </div>
     </div>
   );

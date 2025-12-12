@@ -6,6 +6,8 @@ import axios from "axios";
 const Dashboard = () => {
   const [user, setUser] = useState({ name: "User", role: "patient" });
   const [apptCount, setApptCount] = useState(0);
+  const [doctorStats, setDoctorStats] = useState({ patients: 0, appointments: 0, videoSessions: 0 });
+  
   const navigate = useNavigate();
   const API_URL = "https://askdoc-telehealth.onrender.com/api/v1";
 
@@ -20,10 +22,17 @@ const Dashboard = () => {
         const parsedUser = JSON.parse(storedUser);
         setUser(parsedUser);
         
-        // FETCH APPOINTMENTS COUNT
-        axios.get(`${API_URL}/appointments/my-appointments/${parsedUser.id}`)
-          .then(res => setApptCount(res.data.data.length))
-          .catch(err => console.log(err));
+        // 👇 DYNAMIC DATA FETCHING
+        if (parsedUser.role === 'patient') {
+            axios.get(`${API_URL}/appointments/my-appointments/${parsedUser.id}`)
+              .then(res => setApptCount(res.data.data.length))
+              .catch(err => console.log(err));
+        } else {
+            // DOCTOR: Fetch Stats
+            axios.get(`${API_URL}/appointments/doctor-stats/${parsedUser.name}`)
+              .then(res => setDoctorStats(res.data.data))
+              .catch(err => console.log(err));
+        }
       }
     }
   }, [navigate]);
@@ -33,9 +42,43 @@ const Dashboard = () => {
     navigate("/login");
   };
 
+  const PatientView = () => (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="bg-blue-50 p-6 rounded-xl border border-blue-100">
+        <h3 className="text-blue-800 font-bold mb-2">Find a Doctor</h3>
+        <Link to="/book-appointment"><button className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold">Search Doctors</button></Link>
+      </div>
+      <div className="bg-purple-50 p-6 rounded-xl border border-purple-100">
+        <h3 className="text-purple-800 font-bold mb-2">My Appointments</h3>
+        <p className="text-4xl font-bold text-purple-600 mb-2">{apptCount}</p>
+        <Link to="/my-appointments" className="text-purple-700 underline font-bold text-sm">View Schedule</Link>
+      </div>
+      <div className="bg-green-50 p-6 rounded-xl border border-green-100">
+        <h3 className="text-green-800 font-bold mb-2">Medical History</h3>
+        <Link to="/medical-history" className="text-green-700 underline font-bold text-sm">View Records</Link>
+      </div>
+    </div>
+  );
+
+  const DoctorView = () => (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <h3 className="text-gray-500 text-sm font-medium">Total Patients</h3>
+        <p className="text-3xl font-bold text-gray-800 mt-2">{doctorStats.patients}</p>
+      </div>
+      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <h3 className="text-gray-500 text-sm font-medium">Appointments</h3>
+        <p className="text-3xl font-bold text-blue-600 mt-2">{doctorStats.appointments}</p>
+      </div>
+      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <h3 className="text-gray-500 text-sm font-medium">Video Sessions</h3>
+        <p className="text-3xl font-bold text-purple-600 mt-2">{doctorStats.videoSessions}</p>
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {/* SIDEBAR */}
       <aside className="w-64 bg-white border-r border-gray-200 hidden md:block">
         <div className="p-6"><h1 className="text-2xl font-bold text-blue-600">AskDoc+</h1></div>
         <nav className="mt-6 px-4 space-y-2">
@@ -45,44 +88,24 @@ const Dashboard = () => {
         </nav>
       </aside>
 
-      {/* MAIN CONTENT */}
       <main className="flex-1 p-8">
         <header className="flex justify-between items-center mb-8">
-          <div><h1 className="text-2xl font-bold">Hello, {user.name} 👋</h1></div>
-          
-          {/* 👇 THIS IS THE UPDATED PART (PROFILE PICTURE LOGIC) */}
+          <div>
+            <h1 className="text-2xl font-bold">Hello, {user.name} 👋</h1>
+            <p className="text-gray-500">{user.role === 'patient' ? "Manage your health journey." : "Here is your daily overview."}</p>
+          </div>
           <Link to="/profile">
-            <div className="h-10 w-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold cursor-pointer overflow-hidden border border-gray-300 shadow-sm">
-              {user.photo && user.photo !== "default" ? (
-                <img src={user.photo} alt="Profile" className="h-full w-full object-cover" />
-              ) : (
-                user.name.charAt(0)
-              )}
+            <div className="h-10 w-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold cursor-pointer overflow-hidden border border-gray-300">
+              {user.photo && user.photo !== "default" ? <img src={user.photo} className="h-full w-full object-cover" /> : user.name.charAt(0)}
             </div>
           </Link>
-          {/* 👆 END UPDATED PART */}
-          
         </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-blue-50 p-6 rounded-xl border border-blue-100">
-            <h3 className="text-blue-800 font-bold mb-2">Find a Doctor</h3>
-            <Link to="/book-appointment"><button className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold">Search Doctors</button></Link>
-          </div>
-          <div className="bg-purple-50 p-6 rounded-xl border border-purple-100">
-            <h3 className="text-purple-800 font-bold mb-2">My Appointments</h3>
-            <p className="text-4xl font-bold text-purple-600 mb-2">{apptCount}</p>
-            <Link to="/my-appointments" className="text-purple-700 underline font-bold text-sm">View Schedule</Link>
-          </div>
-          <div className="bg-green-50 p-6 rounded-xl border border-green-100">
-            <h3 className="text-green-800 font-bold mb-2">Medical History</h3>
-            <Link to="/medical-history" className="text-green-700 underline font-bold text-sm">View Records</Link>
-          </div>
-        </div>
+        {user.role === 'patient' ? <PatientView /> : <DoctorView />}
 
         <div className="bg-blue-600 rounded-2xl p-8 text-white flex justify-between items-center">
           <div><h2 className="text-2xl font-bold">Telehealth Session</h2><p>Start a secure video call.</p></div>
-          <Link to="/video" className="bg-white text-blue-600 px-6 py-3 rounded-lg font-bold">Start Video Call</Link>
+          <Link to="/video" className="bg-white text-blue-600 px-6 py-3 rounded-lg font-bold">{user.role === 'patient' ? "Join Waiting Room" : "Start Video Call"}</Link>
         </div>
       </main>
     </div>

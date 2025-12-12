@@ -32,6 +32,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: "default" 
   },
+  specialty: String,       // e.g. Cardiologist
+  experience: String,      // e.g. 5 Years
+  consultationFee: Number, // e.g. 500
+  aboutDoctor: String,     // e.g. "Expert in heart surgery..."
   // 👆 END NEW FIELDS
   password: {
     type: String,
