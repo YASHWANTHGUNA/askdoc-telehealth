@@ -1,68 +1,134 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 
+const API_URL = "https://askdoc-telehealth.onrender.com/api/v1";
 
-const MyAppointments = () => {
-  const [appointments, setAppointments] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const user = JSON.parse(localStorage.getItem("user"));
-  const API_URL = "https://askdoc-telehealth.onrender.com/api/v1";
+const SignUp = () => {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("");
+  const [role, setRole] = useState("patient"); // Default role
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchAppointments = async () => {
-      if (!user || !user.id) return;
-      try {
-        const res = await axios.get(`${API_URL}/appointments/my-appointments/${user.id}`);
-        setAppointments(res.data.data);
-      } catch (err) {
-        console.error("Failed to fetch appointments:", err);
-      } finally {
-        setLoading(false);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    if (password !== passwordConfirm) {
+      setError("Passwords do not match!");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const res = await axios.post(`${API_URL}/users/signup`, {
+        name,
+        email,
+        password,
+        passwordConfirm,
+        role,
+      });
+
+      if (res.data.status === "success") {
+        alert("Account Created Successfully! OTP sent to logs. Please verify.");
+        
+        // Navigate to the verification page, passing the email via state
+        navigate("/verify", { state: { email: email } });
       }
-    };
-    fetchAppointments();
-  }, [user.id]);
-
-  if (loading) return <div className="p-8 text-center">Loading appointments...</div>;
+    } catch (err) {
+      console.error("Signup Error:", err);
+      setError(err.response?.data?.message || "Signup failed. Try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-purple-700 mb-8">My Scheduled Appointments</h1>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
+        <h2 className="text-3xl font-bold text-center text-gray-800 mb-8">Create Account</h2>
 
-        {appointments.length === 0 ? (
-          <div className="bg-white p-6 rounded-xl text-center shadow-md">
-            <p className="text-lg text-gray-600">You currently have no upcoming appointments.</p>
-            <Link to="/book-appointment" className="text-blue-600 font-bold mt-2 inline-block underline">
-              Book your first consultation.
-            </Link>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {appointments.map((appt) => (
-              <div key={appt._id} className="bg-white p-6 rounded-xl border-l-4 border-purple-500 shadow-sm flex justify-between items-center">
-                <div>
-                  <h3 className="text-xl font-bold text-gray-800">
-                    Consultation with {appt.doctorName}
-                  </h3>
-                  <p className="text-gray-600">{appt.specialty} Specialist</p>
-                </div>
-                <div className="text-right">
-                  <p className="font-bold text-purple-600">
-                    {format(new Date(appt.date), 'MMM do, yyyy')}
-                  </p>
-                  <span className={`text-sm font-medium px-3 py-1 rounded-full mt-1 inline-block ${appt.status === 'upcoming' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>
-                    {appt.status}
-                  </span>
-                </div>
-              </div>
-            ))}
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-sm">
+            {error}
           </div>
         )}
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <input
+            type="text"
+            placeholder="Full Name"
+            required
+            className="w-full px-4 py-3 rounded-lg border border-gray-300 outline-none"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+          <input
+            type="email"
+            placeholder="Email Address"
+            required
+            className="w-full px-4 py-3 rounded-lg border border-gray-300 outline-none"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          
+          {/* Role Selection */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Account Type</label>
+            <select
+              required
+              className="w-full px-4 py-3 rounded-lg border border-gray-300 outline-none"
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+            >
+              <option value="patient">Patient</option>
+              <option value="doctor">Doctor</option>
+            </select>
+          </div>
+
+          <input
+            type="password"
+            placeholder="Password (min 8 characters)"
+            required
+            minLength="8"
+            className="w-full px-4 py-3 rounded-lg border border-gray-300 outline-none"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <input
+            type="password"
+            placeholder="Confirm Password"
+            required
+            minLength="8"
+            className="w-full px-4 py-3 rounded-lg border border-gray-300 outline-none"
+            value={passwordConfirm}
+            onChange={(e) => setPasswordConfirm(e.target.value)}
+          />
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition"
+          >
+            {loading ? "Creating..." : "Sign Up"}
+          </button>
+        </form>
+
+        <p className="mt-6 text-center text-gray-600">
+          Already have an account?{" "}
+          <Link to="/login" className="text-blue-600 hover:text-blue-800 font-semibold">
+            Sign In
+          </Link>
+        </p>
       </div>
     </div>
   );
 };
 
-export default MyAppointments;
+export default SignUp;

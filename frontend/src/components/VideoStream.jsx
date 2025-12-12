@@ -9,50 +9,76 @@ import {
 } from '@stream-io/video-react-sdk';
 import '@stream-io/video-react-sdk/dist/css/styles.css';
 import { useNavigate } from 'react-router-dom';
-import { useStream } from '../StreamContext';
+// import { useStream } from '../StreamContext'; // ❌ REMOVE THIS IMPORT
+
+// Note: VITE_STREAM_API_KEY is embedded in the build by Vercel/Vite
+const apiKey = import.meta.env.VITE_STREAM_API_KEY;
 
 const VideoStream = () => {
   const navigate = useNavigate();
-  const { user, streamToken: token, loading } = useStream();
   const [client, setClient] = useState(null);
   const [call, setCall] = useState(null);
+  const [error, setError] = useState(null);
+  const [authData, setAuthData] = useState(null);
 
-  // Get API Key from your .env file
-  const apiKey = import.meta.env.VITE_STREAM_API_KEY;
-
-  // 1. Initialize the Video Client
+  // 1. Get Auth Data directly from LocalStorage
   useEffect(() => {
-    if (!user || !token || loading) return;
+    const userString = localStorage.getItem("user");
+    const streamToken = localStorage.getItem("streamToken");
+    
+    if (!userString || !streamToken) {
+        // If data is missing, redirect
+        alert("Video session error: Missing authentication data. Please log in again.");
+        navigate('/login');
+        return;
+    }
+    
+    // Parse data and save it to state
+    const user = JSON.parse(userString);
+    setAuthData({ user, streamToken });
+  }, [navigate]);
 
-    const myClient = new StreamVideoClient({
-      apiKey,
-      user: {
-        id: user.id,
-        name: user.name,
-        image: user.image,
-      },
-      token,
-    });
 
-    setClient(myClient);
-
-    return () => {
-      myClient.disconnectUser();
-      setClient(null);
-    };
-  }, [user, token, loading]);
-
-  // 2. Create/Join a default Call
+  // 2. Initialize the Video Client
   useEffect(() => {
-    if (!client) return;
+    if (!authData || client) return;
 
-    // We use a hardcoded ID "default_call" for this demo
-    // In a real app, you'd generate a unique ID for each appointment
+    try {
+        const myClient = new StreamVideoClient({
+            apiKey,
+            user: {
+                id: authData.user.id,
+                name: authData.user.name,
+                image: authData.user.photo || undefined, // Use photo if available
+            },
+            token: authData.streamToken, // Use the token from Local Storage
+        });
+
+        setClient(myClient);
+
+        return () => {
+            myClient.disconnectUser();
+            setClient(null);
+        };
+    } catch (e) {
+        console.error("Stream Client Initialization Failed:", e);
+        setError("Could not initialize video client. Check API Key or Token.");
+    }
+  }, [authData]);
+
+  // 3. Create/Join the Call
+  useEffect(() => {
+    if (!client || call) return;
+
+    // Use a fixed call ID for demonstration
     const myCall = client.call('default', 'telehealth_demo_room');
 
     myCall.join({ create: true })
       .then(() => setCall(myCall))
-      .catch((err) => console.error("Failed to join call", err));
+      .catch((err) => {
+        console.error("Failed to join call", err);
+        setError("Failed to join call. Check your network or permissions.");
+      });
 
     return () => {
       if (myCall) {
@@ -61,8 +87,9 @@ const VideoStream = () => {
     };
   }, [client]);
 
-  if (loading) return <div className="text-center mt-20">Loading User...</div>;
-  if (!client || !call) return <div className="text-center mt-20">Setting up Camera...</div>;
+  if (!authData) return <div className="text-center mt-20 p-8">Checking Authentication...</div>;
+  if (error) return <div className="text-center mt-20 p-8 text-red-600 font-bold">Video Error: {error}</div>;
+  if (!client || !call) return <div className="text-center mt-20 p-8">Setting up Video Session...</div>;
 
   return (
     <div className="h-screen w-screen bg-gray-900 text-white">
