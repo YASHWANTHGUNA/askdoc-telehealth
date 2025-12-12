@@ -4,16 +4,18 @@ import axios from "axios";
 
 const UserProfile = () => {
   const [user, setUser] = useState({});
+  const [preview, setPreview] = useState(null); // For showing the image instantly
   const [formData, setFormData] = useState({
-    email: "", // Added Email
+    email: "", 
     phone: "",
     address: "",
     gender: "",
     dob: "",
-    bloodGroup: "", // New
-    height: "",     // New
-    weight: "",     // New
-    medicalBio: ""  // New
+    bloodGroup: "", 
+    height: "",     
+    weight: "",     
+    medicalBio: "",
+    photo: "" // Store Base64 string here
   });
 
   const API_URL = "https://askdoc-telehealth.onrender.com/api/v1";
@@ -22,6 +24,7 @@ const UserProfile = () => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
     if (storedUser) {
       setUser(storedUser);
+      setPreview(storedUser.photo !== "default" ? storedUser.photo : null);
       setFormData({
         email: storedUser.email || "",
         phone: storedUser.phone || "",
@@ -31,13 +34,33 @@ const UserProfile = () => {
         bloodGroup: storedUser.bloodGroup || "",
         height: storedUser.height || "",
         weight: storedUser.weight || "",
-        medicalBio: storedUser.medicalBio || ""
+        medicalBio: storedUser.medicalBio || "",
+        photo: storedUser.photo || ""
       });
     }
   }, []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  // 📸 NEW: Handle Image Upload
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Limit file size to 70KB to prevent Database errors
+      if (file.size > 70000) {
+        alert("File too large! Please choose a smaller image (under 70KB).");
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreview(reader.result); // Show visual preview
+        setFormData({ ...formData, photo: reader.result }); // Save string to form
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleSave = async () => {
@@ -53,7 +76,7 @@ const UserProfile = () => {
       alert("Profile Updated Successfully!");
     } catch (err) {
       console.error(err);
-      alert("Failed to update profile.");
+      alert("Failed to update profile. (Image might be too big)");
     }
   };
 
@@ -62,9 +85,29 @@ const UserProfile = () => {
       <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-3xl">
         {/* HEADER */}
         <div className="flex items-center gap-6 mb-8 border-b pb-6">
-          <div className="h-20 w-20 bg-blue-600 rounded-full flex items-center justify-center text-white text-3xl font-bold uppercase">
-            {user.name?.charAt(0)}
+          
+          {/* 📸 PROFILE PICTURE AREA */}
+          <div className="relative group">
+            <div className="h-24 w-24 rounded-full overflow-hidden border-4 border-blue-100 shadow-sm flex items-center justify-center bg-blue-600 text-white text-3xl font-bold uppercase">
+              {preview ? (
+                <img src={preview} alt="Profile" className="h-full w-full object-cover" />
+              ) : (
+                user.name?.charAt(0)
+              )}
+            </div>
+            
+            {/* HIDDEN INPUT & OVERLAY */}
+            <label className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 flex items-center justify-center rounded-full cursor-pointer transition-all">
+              <span className="text-white opacity-0 group-hover:opacity-100 font-bold text-xs">Change</span>
+              <input 
+                type="file" 
+                accept="image/*" 
+                className="hidden" 
+                onChange={handleImageUpload} 
+              />
+            </label>
           </div>
+
           <div>
             <h1 className="text-2xl font-bold">{user.name}</h1>
             <p className="text-gray-500">{user.email}</p>
@@ -82,32 +125,15 @@ const UserProfile = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-gray-700 text-sm font-bold mb-2">Email (Read Only)</label>
-                <input 
-                  name="email" 
-                  value={formData.email} 
-                  disabled 
-                  className="w-full p-3 border rounded bg-gray-100 text-gray-500 cursor-not-allowed" 
-                />
+                <input name="email" value={formData.email} disabled className="w-full p-3 border rounded bg-gray-100 text-gray-500 cursor-not-allowed" />
               </div>
               <div>
                 <label className="block text-gray-700 text-sm font-bold mb-2">Phone Number</label>
-                <input 
-                  name="phone" 
-                  value={formData.phone} 
-                  onChange={handleChange} 
-                  className="w-full p-3 border rounded focus:ring-2 focus:ring-blue-500 outline-none" 
-                  placeholder="+91 98765 43210" 
-                />
+                <input name="phone" value={formData.phone} onChange={handleChange} className="w-full p-3 border rounded focus:ring-2 focus:ring-blue-500 outline-none" placeholder="+91 98765 43210" />
               </div>
               <div className="md:col-span-2">
                 <label className="block text-gray-700 text-sm font-bold mb-2">Address</label>
-                <input 
-                  name="address" 
-                  value={formData.address} 
-                  onChange={handleChange} 
-                  className="w-full p-3 border rounded focus:ring-2 focus:ring-blue-500 outline-none" 
-                  placeholder="Street, City, State" 
-                />
+                <input name="address" value={formData.address} onChange={handleChange} className="w-full p-3 border rounded focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Street, City, State" />
               </div>
             </div>
           </div>
@@ -161,14 +187,7 @@ const UserProfile = () => {
             </div>
             <div>
               <label className="block text-gray-700 text-sm font-bold mb-2">Current Medical Conditions / Allergies</label>
-              <textarea 
-                name="medicalBio" 
-                value={formData.medicalBio} 
-                onChange={handleChange} 
-                rows="3"
-                className="w-full p-3 border rounded focus:ring-2 focus:ring-blue-500 outline-none" 
-                placeholder="E.g., Diabetic, Peanut Allergy, Asthma..." 
-              />
+              <textarea name="medicalBio" value={formData.medicalBio} onChange={handleChange} rows="3" className="w-full p-3 border rounded focus:ring-2 focus:ring-blue-500 outline-none" placeholder="E.g., Diabetic, Peanut Allergy, Asthma..." />
             </div>
           </div>
 

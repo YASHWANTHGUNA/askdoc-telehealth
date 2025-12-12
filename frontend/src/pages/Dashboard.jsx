@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -34,6 +35,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
+      {/* SIDEBAR */}
       <aside className="w-64 bg-white border-r border-gray-200 hidden md:block">
         <div className="p-6"><h1 className="text-2xl font-bold text-blue-600">AskDoc+</h1></div>
         <nav className="mt-6 px-4 space-y-2">
@@ -43,14 +45,23 @@ const Dashboard = () => {
         </nav>
       </aside>
 
+      {/* MAIN CONTENT */}
       <main className="flex-1 p-8">
         <header className="flex justify-between items-center mb-8">
           <div><h1 className="text-2xl font-bold">Hello, {user.name} 👋</h1></div>
+          
+          {/* 👇 THIS IS THE UPDATED PART (PROFILE PICTURE LOGIC) */}
           <Link to="/profile">
-            <div className="h-10 w-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold cursor-pointer">
-              {user.name.charAt(0)}
+            <div className="h-10 w-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold cursor-pointer overflow-hidden border border-gray-300 shadow-sm">
+              {user.photo && user.photo !== "default" ? (
+                <img src={user.photo} alt="Profile" className="h-full w-full object-cover" />
+              ) : (
+                user.name.charAt(0)
+              )}
             </div>
           </Link>
+          {/* 👆 END UPDATED PART */}
+          
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
