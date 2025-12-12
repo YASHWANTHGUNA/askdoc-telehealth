@@ -1,124 +1,51 @@
-import React, { useState, useEffect } from "react";
-import { useStream } from "../StreamContext";
-import { useNavigate } from "react-router-dom";
+
+import React, { useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
+
+const doctors = [
+  { name: "Dr. Sarah Smith", specialty: "Cardiologist", image: "❤️" },
+  { name: "Dr. John Doe", specialty: "Dentist", image: "🦷" },
+  { name: "Dr. Emily Stone", specialty: "Dermatologist", image: "🧴" },
+];
 
 const BookAppointment = () => {
-  const { authToken } = useStream();
   const navigate = useNavigate();
-  const [doctors, setDoctors] = useState([]);
-  const [selectedDoctor, setSelectedDoctor] = useState("");
-  const [appointmentDate, setAppointmentDate] = useState("");
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
+  const user = JSON.parse(localStorage.getItem("user"));
 
-  useEffect(() => {
-    const fetchDoctors = async () => {
-      try {
-        const response = await axios.get(
-          "http://localhost:8000/api/v1/appointments/all-doctors",
-          {
-            headers: {
-              Authorization: `Bearer ${authToken}`,
-            },
-          }
-        );
-        setDoctors(response.data.data.doctors);
-      } catch (err) {
-        setError("Failed to fetch doctors.");
-        console.error(err);
-      }
-    };
-
-    if (authToken) {
-      fetchDoctors();
-    }
-  }, [authToken]);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError(null);
-    setSuccess(null);
-
-    if (!selectedDoctor || !appointmentDate) {
-      setError("Please select a doctor and a date.");
-      return;
-    }
-
+  const handleBook = async (doctor) => {
     try {
-      await axios.post(
-        "http://localhost:8000/api/v1/appointments",
-        {
-          doctor: selectedDoctor,
-          appointmentDate,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${authToken}`,
-          },
-        }
-      );
-      setSuccess("Appointment booked successfully!");
-      setSelectedDoctor("");
-      setAppointmentDate("");
+      await axios.post("https://askdoc-telehealth.onrender.com/api/v1/appointments/book", {
+        patientId: user.id, // We get this from local storage
+        doctorName: doctor.name,
+        specialty: doctor.specialty,
+        date: new Date() // For now, just books for "Now"
+      });
+      alert(`Booked with ${doctor.name}!`);
+      navigate("/dashboard");
     } catch (err) {
-      setError("Failed to book appointment.");
-      console.error(err);
+      alert("Booking failed");
     }
   };
 
   return (
-    <div className="container mx-auto mt-10">
-      <h1 className="text-2xl font-bold mb-5">Book an Appointment</h1>
-      {error && <p className="text-red-500">{error}</p>}
-      {success && <p className="text-green-500">{success}</p>}
-      <form onSubmit={handleSubmit} className="max-w-md">
-        <div className="mb-4">
-          <label htmlFor="doctor" className="block text-gray-700 font-bold mb-2">
-            Select Doctor
-          </label>
-          <select
-            id="doctor"
-            value={selectedDoctor}
-            onChange={(e) => setSelectedDoctor(e.target.value)}
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          >
-            <option value="">Select a doctor</option>
-            {doctors.map((doctor) => (
-              <option key={doctor._id} value={doctor._id}>
-                {doctor.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="mb-4">
-          <label
-            htmlFor="appointmentDate"
-            className="block text-gray-700 font-bold mb-2"
-          >
-            Select Date and Time
-          </label>
-          <input
-            type="datetime-local"
-            id="appointmentDate"
-            value={appointmentDate}
-            onChange={(e) => setAppointmentDate(e.target.value)}
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          />
-        </div>
-        <button
-          type="submit"
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-        >
-          Book Appointment
-        </button>
-      </form>
-      <button
-        onClick={() => navigate("/dashboard")}
-        className="mt-5 bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-      >
-        Back to Dashboard
-      </button>
+    <div className="min-h-screen bg-gray-50 p-8">
+      <h1 className="text-3xl font-bold mb-6 text-gray-800">Choose a Specialist</h1>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {doctors.map((doc, index) => (
+          <div key={index} className="bg-white p-6 rounded-xl shadow-md text-center">
+            <div className="text-6xl mb-4">{doc.image}</div>
+            <h3 className="text-xl font-bold">{doc.name}</h3>
+            <p className="text-gray-500 mb-4">{doc.specialty}</p>
+            <button 
+              onClick={() => handleBook(doc)}
+              className="bg-blue-600 text-white px-6 py-2 rounded-full font-bold hover:bg-blue-700"
+            >
+              Book Appointment
+            </button>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

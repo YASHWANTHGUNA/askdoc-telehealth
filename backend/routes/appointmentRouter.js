@@ -1,13 +1,25 @@
 const express = require("express");
-const appointmentController = require("../controller/appointmentController");
-const isAuthenticated = require("../middlewares/isAuthenticated");
-
+const Appointment = require("../models/appointmentModel");
 const router = express.Router();
 
-// Protect all routes (User must be logged in)
-router.use(isAuthenticated);
+// BOOK APPOINTMENT
+router.post("/book", async (req, res) => {
+  try {
+    const newAppointment = await Appointment.create(req.body);
+    res.status(201).json({ status: "success", data: newAppointment });
+  } catch (err) {
+    res.status(400).json({ status: "fail", message: err.message });
+  }
+});
 
-router.get("/", appointmentController.getMyAppointments);
-router.post("/", appointmentController.createAppointment);
+// GET MY APPOINTMENTS
+router.get("/my-appointments/:userId", async (req, res) => {
+  try {
+    const appointments = await Appointment.find({ patientId: req.params.userId });
+    res.status(200).json({ status: "success", data: appointments });
+  } catch (err) {
+    res.status(400).json({ status: "fail", message: err.message });
+  }
+});
 
 module.exports = router;

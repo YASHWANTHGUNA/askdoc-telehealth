@@ -1,17 +1,18 @@
-import { Routes, Route } from 'react-router-dom'; // Removed 'BrowserRouter as Router'
+import { Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
 import SignUp from './pages/SignUp';
 import VerifyAccount from './pages/VerifyAccount';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import VideoStream from './components/VideoStream';
-import BookAppointment from './pages/BookAppointment';
+import BookAppointment from './pages/BookAppointment'; // Updated
 import MyAppointments from './pages/MyAppointments';
 import About from './pages/About';
+import UserProfile from './pages/UserProfile'; // New
+import MedicalHistory from './pages/MedicalHistory'; // New
 
 function App() {
   return (
-    // <Router> was here. We REMOVED it because main.jsx handles it now.
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/signup" element={<SignUp />} />
@@ -22,6 +23,8 @@ function App() {
       <Route path="/book-appointment" element={<BookAppointment />} />
       <Route path="/my-appointments" element={<MyAppointments />} />
       <Route path="/about" element={<About />} />
+      <Route path="/profile" element={<UserProfile />} />
+      <Route path="/medical-history" element={<MedicalHistory />} />
     </Routes>
   );
 }

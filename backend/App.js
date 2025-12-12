@@ -5,21 +5,18 @@ const cookieParser = require("cookie-parser");
 // Import Routers
 const userRouter = require("./routes/userRouter");
 const streamRouter = require("./routes/streamRouter");
-const appointmentRouter = require("./routes/appointmentRouter"); // ✅ Valid Import
+// 👇 NEW IMPORTS
+const appointmentRouter = require("./routes/appointmentRouter");
+const medicalRouter = require("./routes/medicalRouter");
 
-// Import Error Controller (Make sure you have this form the auth setup)
 const AppError = require("./utils/appError");
 const globalErrorHandler = require("./controller/errorController");
 
 const app = express();
 
-// Middleware
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "https://askdoc-telehealth.vercel.app", // ❌ Remove the '/' at the end
-    ],
+    origin: ["http://localhost:5173", "https://askdoc-telehealth.vercel.app"],
     credentials: true,
   })
 );
@@ -29,20 +26,18 @@ app.use(cookieParser());
 // Routes
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/stream", streamRouter);
-app.use("/api/v1/appointments", appointmentRouter); // ✅ Route Mounted
+// 👇 NEW ROUTES REGISTERED
+app.use("/api/v1/appointments", appointmentRouter);
+app.use("/api/v1/medical-history", medicalRouter);
 
-// A simple route for the homepage
 app.get("/", (req, res) => {
   res.status(200).send("Telehealth API is running successfully! 🚀");
 });
 
-// 1. Handle Unhandled Routes (404)
-// Use '/*' so path-to-regexp parses the wildcard correctly
 app.all(/(.*)/, (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
 });
 
-// 2. Global Error Handler (Converts errors to JSON)
 app.use(globalErrorHandler);
 
 module.exports = app;
