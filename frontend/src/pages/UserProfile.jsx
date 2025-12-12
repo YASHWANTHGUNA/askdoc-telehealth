@@ -57,11 +57,12 @@ const UserProfile = () => {
   };
 
   const handleSave = async () => {
-    try {
-      const res = await axios.patch(`${API_URL}/users/update-profile`, {
-        userId: user.id,
-        ...formData
-      });
+  try {
+    const res = await axios.patch(`${API_URL}/users/update-profile`, {
+      // FIX 2: Use user._id instead of user.id
+      userId: user._id, 
+      ...formData
+    });
       const updatedUser = { ...user, ...res.data.data };
       localStorage.setItem("user", JSON.stringify(updatedUser));
       setUser(updatedUser);
