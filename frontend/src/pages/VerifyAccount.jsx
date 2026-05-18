@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import axios from "axios";
-
-// ✅ FORCE THE CORRECT RENDER URL
-const API_URL = "https://askdoc-telehealth.onrender.com/api/v1";
+import api from "../api/axiosInstance";
 
 const VerifyAccount = () => {
   const [otp, setOtp] = useState("");
@@ -28,7 +25,7 @@ const VerifyAccount = () => {
 
     try {
       // ✅ Using the Render URL instead of localhost
-      const res = await axios.post(`${API_URL}/users/verifyOTP`, {
+      const res = await api.post(`/users/verifyOTP`, {
         email,
         otp,
       });
@@ -53,7 +50,7 @@ const VerifyAccount = () => {
           Verify Account
         </h2>
         <p className="text-center text-gray-500 mb-6">
-          Check your Render Logs for the 6-digit code.
+          A verification code has been sent to your email.
         </p>
 
         {error && (

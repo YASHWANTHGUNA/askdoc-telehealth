@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../api/axiosInstance";
 
 const UserProfile = () => {
   const [user, setUser] = useState({});
@@ -13,13 +13,15 @@ const UserProfile = () => {
     specialty: "", experience: "", consultationFee: "", aboutDoctor: ""
   });
 
-  const API_URL = "https://askdoc-telehealth.onrender.com/api/v1";
+
 
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
     if (storedUser) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setUser(storedUser);
       setPreview(storedUser.photo !== "default" ? storedUser.photo : null);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData({
         email: storedUser.email || "",
         phone: storedUser.phone || "",
@@ -57,7 +59,7 @@ const UserProfile = () => {
   };
   const handleSave = async () => {
   try {
-    const res = await axios.patch(`${API_URL}/users/update-profile`, {
+    const res = await api.patch(`/users/update-profile`, {
       // ✅ FIX 4: Use user.id instead of user._id
       userId: user.id, 
       ...formData
@@ -69,6 +71,7 @@ const UserProfile = () => {
       setUser(updatedUser);
       alert("Profile Updated Successfully!");
     } catch (err) {
+      console.error("Failed to update profile:", err);
       alert("Failed to update.");
     }
   };

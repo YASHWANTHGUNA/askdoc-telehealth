@@ -1,10 +1,7 @@
 
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
-
-const API_URL = "https://askdoc-telehealth.onrender.com/api/v1";
-
+import api from "../api/axiosInstance";
 const SignUp = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -27,7 +24,7 @@ const SignUp = () => {
     }
 
     try {
-      const res = await axios.post(`${API_URL}/users/signup`, {
+      const res = await api.post(`/users/signup`, {
         name,
         email,
         password,
@@ -36,14 +33,18 @@ const SignUp = () => {
       });
 
       if (res.data.status === "success") {
-        alert("Account Created Successfully! OTP sent to logs. Please verify.");
+        alert("Account Created Successfully! A verification code has been sent to your email.");
         
         // Navigate to the verification page, passing the email via state
         navigate("/verify", { state: { email: email } });
       }
     } catch (err) {
-      console.error("Signup Error:", err);
-      setError(err.response?.data?.message || "Signup failed. Try again.");
+      if (err.response && err.response.status === 400 && err.response.data?.message?.includes("E11000")) {
+        setError("This email is already registered. Please try signing in!");
+      } else {
+        console.error("Signup Error:", err);
+        setError(err.response?.data?.message || "Signup failed. Try again.");
+      }
     } finally {
       setLoading(false);
     }

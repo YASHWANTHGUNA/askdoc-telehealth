@@ -1,27 +1,34 @@
+// backend/routes/userRouter.js
+
 const express = require("express");
 const authController = require("../controller/authController");
-const User = require("../models/userModel"); // Import User model
+const isAuthenticated = require("../middlewares/isAuthenticated"); // add this import
+const User = require("../models/userModel");
 const router = express.Router();
 
 router.post("/signup", authController.signup);
 router.post("/verifyOTP", authController.verifyOTP);
 router.post("/login", authController.login);
 
-// 👇 NEW: UPDATE PROFILE ROUTE
-router.patch("/update-profile", async (req, res) => {
+// Protected — user must be logged in, ID comes from token not body
+router.patch("/update-profile", isAuthenticated, async (req, res) => {
   try {
-    const updatedUser = await User.findByIdAndUpdate(req.body.userId, req.body, {
-      new: true,
-      runValidators: true
-    });
+    // Remove any attempt to change role or password through this route
+    const { password, passwordConfirm, role, ...safeFields } = req.body;
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user.id, // ← from the verified JWT, not the request body
+      safeFields,
+      { new: true, runValidators: true }
+    );
     res.status(200).json({ status: "success", data: updatedUser });
   } catch (err) {
     res.status(400).json({ status: "fail", message: err.message });
   }
 });
+
 router.get("/doctors", async (req, res) => {
   try {
-    // Find all users where role is 'doctor'
     const doctors = await User.find({ role: "doctor" });
     res.status(200).json({ status: "success", data: doctors });
   } catch (err) {

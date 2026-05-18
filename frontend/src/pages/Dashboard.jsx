@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../api/axiosInstance";
 
 const Dashboard = () => {
   const [user, setUser] = useState({ name: "User", role: "patient" });
@@ -9,7 +9,7 @@ const Dashboard = () => {
   const [doctorStats, setDoctorStats] = useState({ patients: 0, appointments: 0, videoSessions: 0 });
   
   const navigate = useNavigate();
-  const API_URL = "https://askdoc-telehealth.onrender.com/api/v1";
+
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -26,12 +26,12 @@ const Dashboard = () => {
        // FETCH APPOINTMENTS COUNT
       if (parsedUser.role === 'patient') {
           // ✅ FIX 3: Use parsedUser.id
-          axios.get(`${API_URL}/appointments/my-appointments/${parsedUser.id}`)
+          api.get(`/appointments/my-appointments/${parsedUser.id}`)
             .then(res => setApptCount(res.data.data.length))
             .catch(err => console.log(err));
         } else {
             // DOCTOR: Fetch Stats
-            axios.get(`${API_URL}/appointments/doctor-stats/${parsedUser.name}`)
+            api.get(`/appointments/doctor-stats/${parsedUser.name}`)
               .then(res => setDoctorStats(res.data.data))
               .catch(err => console.log(err));
         }

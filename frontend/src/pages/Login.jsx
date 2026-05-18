@@ -1,9 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
-
-// ✅ FORCE THE CORRECT RENDER URL
-const API_URL = "https://askdoc-telehealth.onrender.com/api/v1";
+import api from "../api/axiosInstance";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -19,7 +16,7 @@ const Login = () => {
 
     try {
       // ✅ 1. Send Login Request to Render
-      const res = await axios.post(`${API_URL}/users/login`, {
+      const res = await api.post(`/users/login`, {
         email,
         password,
       });
@@ -35,7 +32,7 @@ const Login = () => {
         }
 
         alert("Login Successful!");
-        window.location.href = "/dashboard"; 
+        navigate("/dashboard"); 
       }
     } catch (err) {
       console.error("Login Error:", err);
@@ -56,7 +53,13 @@ const Login = () => {
 
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-sm">
-            {error}
+            <p className="font-bold">Login failed</p>
+            <p>{error}</p>
+            {error.toLowerCase().includes("network") && (
+              <p className="mt-2 text-xs">
+                The server may be starting up. Please wait 30 seconds and try again.
+              </p>
+            )}
           </div>
         )}
 

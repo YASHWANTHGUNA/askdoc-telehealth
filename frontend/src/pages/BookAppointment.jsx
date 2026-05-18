@@ -1,22 +1,22 @@
 
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../api/axiosInstance";
 import { useNavigate } from "react-router-dom";
 
 const BookAppointment = () => {
   const [doctors, setDoctors] = useState([]);
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user"));
-  const API_URL = "https://askdoc-telehealth.onrender.com/api/v1";
+
 
   // 👇 FETCH REAL DOCTORS
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
-        const res = await axios.get(`${API_URL}/users/doctors`);
+        const res = await api.get(`/users/doctors`);
         setDoctors(res.data.data);
       } catch (err) {
-        console.log("Error fetching doctors");
+        console.error("Error fetching doctors:", err);
       }
     };
     fetchDoctors();
@@ -24,7 +24,7 @@ const BookAppointment = () => {
 
   const handleBook = async (doctor) => {
     try {
-      await axios.post(`${API_URL}/appointments/book`, {
+      await api.post(`/appointments/book`, {
         patientId: user.id,
         doctorName: doctor.name, // Saves your name!
         specialty: doctor.specialty || "General",
@@ -33,6 +33,7 @@ const BookAppointment = () => {
       alert(`Booked with ${doctor.name}!`);
       navigate("/dashboard");
     } catch (err) {
+      console.error("Booking failed:", err);
       alert("Booking failed");
     }
   };

@@ -1,9 +1,8 @@
 import React, { createContext, useState } from "react";
-import axios from "axios";
+import api from "../api/axiosInstance";
 
-// API base for backend
-const API_URL = "http://localhost:8000/api/v1";
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const StreamContext = createContext();
 
 export const StreamProvider = ({ children }) => {
@@ -12,7 +11,7 @@ export const StreamProvider = ({ children }) => {
       if (typeof window === "undefined") return null;
       const stored = localStorage.getItem("user");
       return stored ? JSON.parse(stored) : null;
-    } catch (_) {
+    } catch {
       return null;
     }
   });
@@ -21,16 +20,16 @@ export const StreamProvider = ({ children }) => {
     try {
       if (typeof window === "undefined") return null;
       return localStorage.getItem("token") || null;
-    } catch (_) {
+    } catch {
       return null;
     }
   });
 
-  const [loading, setLoading] = useState(false);
+
 
   const login = async (email, password) => {
     try {
-      const res = await axios.post(`${API_URL}/users/login`, {
+      const res = await api.post(`/users/login`, {
         email,
         password,
       });
@@ -56,7 +55,7 @@ export const StreamProvider = ({ children }) => {
   };
 
   return (
-    <StreamContext.Provider value={{ user, token, login, logout, loading }}>
+    <StreamContext.Provider value={{ user, token, login, logout }}>
       {children}
     </StreamContext.Provider>
   );

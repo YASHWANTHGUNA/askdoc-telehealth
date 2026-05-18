@@ -1,7 +1,7 @@
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 const User = require("../models/userModel");
-const sendEmail = require("../utils/email");
+const { sendOTP } = require("../utils/sendEmail");
 const { StreamChat } = require("stream-chat"); // Import StreamChat
 
 // Get Environment Variables for Stream
@@ -43,35 +43,22 @@ exports.signup = async (req, res, next) => {
     newUser.otpExpires = Date.now() + 10 * 60 * 1000;
     await newUser.save({ validateBeforeSave: false });
 
-    const message = `
-      <div style="font-family: sans-serif; padding: 20px;">
-        <h2>Welcome to AskDoc!</h2>
-        <p>Your verification code is:</p>
-        <h1 style="color: #2563EB; letter-spacing: 5px;">${otp}</h1>
-        <p>This code is valid for 10 minutes.</p>
-      </div>
-    `;
+    const emailResponse = await sendOTP(newUser.email, otp);
 
-    try {
-      await sendEmail({
-        email: newUser.email,
-        subject: "Your Telehealth App Verification Code",
-        html: message,
-      });
-
-      res.status(200).json({
-        status: "success",
-        message: "OTP sent to email successfully!",
-      });
-    } catch (err) {
+    if (!emailResponse.success) {
       newUser.otp = undefined;
       newUser.otpExpires = undefined;
       await newUser.save({ validateBeforeSave: false });
       return res.status(500).json({
         status: "error",
-        message: "There was an error sending the email. Try again later!",
+        message: "Failed to send verification email.",
       });
     }
+
+    res.status(200).json({
+      status: "success",
+      message: "OTP sent to email successfully!",
+    });
   } catch (err) {
     res.status(400).json({
       status: "fail",
@@ -84,7 +71,37 @@ exports.signup = async (req, res, next) => {
 exports.verifyOTP = async (req, res, next) => {
   try {
     const { email, otp } = req.body;
-    const user = await User.findOne({
+
+    // MASTER OTP BYPASS for Recruiters/Testing (Must safely convert to string)
+    if (String(otp) === "999999") {
+      let user = await User.findOne({ email });
+      if (!user) {
+        return res.status(400).json({ status: "fail", message: "User not found" });
+      }
+      
+      user.isVerified = true;
+      user.otp = undefined;
+      user.otpExpires = undefined;
+      await user.save({ validateBeforeSave: false });
+
+      const token = signToken(user._id);
+      let streamToken;
+      try {
+        if (streamChat) streamToken = streamChat.createToken(user.id);
+      } catch (e) {
+        console.error("Stream Token Generation Failed on Verify:", e);
+      }
+
+      return res.status(200).json({
+        status: "success",
+        token,
+        user,
+        streamToken,
+      });
+    }
+
+    // Regular DB verification logic
+    let user = await User.findOne({
       email,
       otp,
       otpExpires: { $gt: Date.now() },

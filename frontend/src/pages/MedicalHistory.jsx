@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../api/axiosInstance";
 
 const MedicalHistory = () => {
   const [records, setRecords] = useState([]);
@@ -10,16 +10,17 @@ const MedicalHistory = () => {
   // Fetch History
   useEffect(() => {
     if (user) {
-      axios.get(`https://askdoc-telehealth.onrender.com/api/v1/medical-history/${user.id}`)
+      api.get(`/medical-history/${user.id}`)
         .then(res => setRecords(res.data.data))
         .catch(err => console.log(err));
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Add Record
   const handleAdd = async () => {
     try {
-      const res = await axios.post("https://askdoc-telehealth.onrender.com/api/v1/medical-history", {
+      const res = await api.post("/medical-history", {
         patientId: user.id,
         condition: newCondition,
         description: newDesc
@@ -28,6 +29,7 @@ const MedicalHistory = () => {
       setNewCondition("");
       setNewDesc("");
     } catch (err) {
+      console.error("Error adding record:", err);
       alert("Error adding record");
     }
   };

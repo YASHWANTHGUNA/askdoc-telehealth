@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom"; // Import Link for 'Book Appointment' button
-import axios from "axios";
+import api from "../api/axiosInstance";
 import { format } from 'date-fns'; // Use date-fns for proper date display
 
 const MyAppointments = () => {
@@ -14,8 +14,7 @@ const MyAppointments = () => {
   const storedUser = localStorage.getItem("user");
   const user = storedUser ? JSON.parse(storedUser) : null;
   
-  // 2. Use your live Render URL
-  const API_URL = "https://askdoc-telehealth.onrender.com/api/v1";
+
 
  useEffect(() => {
     const fetchAppointments = async () => {
@@ -29,8 +28,8 @@ const MyAppointments = () => {
       
       try {
         // Use the safely determined userId for the API call
-        const response = await axios.get(
-          `${API_URL}/appointments/my-appointments/${userId}` 
+        const response = await api.get(
+          `/appointments/my-appointments/${userId}` 
         );
         
         // The appointments are likely in response.data.data
