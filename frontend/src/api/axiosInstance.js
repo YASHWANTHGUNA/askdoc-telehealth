@@ -1,9 +1,33 @@
 import axios from "axios";
 
 const api = axios.create({
-  // Fallback to Render URL for production if Vercel ENV is missing
-  baseURL: import.meta.env.VITE_API_URL || "https://askdoc-telehealth.onrender.com/api/v1",
-  timeout: 60000, // 60 seconds — long enough for a cold start
+  baseURL:
+    import.meta.env.VITE_API_URL ||
+    "http://localhost:8000/api/v1",
+
+  withCredentials: true,
 });
+
+// ======================================
+// ATTACH JWT TOKEN AUTOMATICALLY
+// ======================================
+
+api.interceptors.request.use(
+  (config) => {
+    const token =
+      localStorage.getItem("token");
+
+    if (token) {
+      config.headers.Authorization =
+        `Bearer ${token}`;
+    }
+
+    return config;
+  },
+
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 export default api;
