@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import api from "../api/axiosInstance";
+import toast from "react-hot-toast"; // ✅ Added import
 
 const UserProfile = () => {
   const [user, setUser] = useState({});
@@ -94,13 +95,13 @@ const UserProfile = () => {
 
     // OPTIONAL EXTRA VALIDATION
     if (!file.type.startsWith("image/")) {
-      alert("Please upload a valid image.");
+      toast.error("Please upload a valid image."); // ✅ Replaced alert
       return;
     }
 
     // 10MB FRONTEND CHECK
     if (file.size > 10 * 1024 * 1024) {
-      alert("Image too large. Max size is 10MB.");
+      toast.error("Image too large. Max size is 10MB."); // ✅ Replaced alert
       return;
     }
 
@@ -179,7 +180,7 @@ const UserProfile = () => {
         setPreview(updatedUser.photo);
       }
 
-      alert("Profile Updated Successfully!");
+      toast.success("Profile Updated Successfully!"); // ✅ Replaced alert
 
     } catch (err) {
       console.error(
@@ -187,9 +188,9 @@ const UserProfile = () => {
         err
       );
 
-      alert(
-        err.response?.data?.message ||
-          "Failed to update profile."
+      // ✅ Replaced alert
+      toast.error(
+        err.response?.data?.message || "Failed to update profile."
       );
     } finally {
       setUploading(false);

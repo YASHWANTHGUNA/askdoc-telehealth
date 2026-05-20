@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../api/axiosInstance";
+import toast from "react-hot-toast"; // ✅ Added import
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -28,10 +29,11 @@ const Login = () => {
         
         // 🛑 CRITICAL: SAVE THE STREAM TOKEN
         if (res.data.streamToken) {
-            localStorage.setItem("streamToken", res.data.streamToken); // <-- ADD THIS LINE!
+            localStorage.setItem("streamToken", res.data.streamToken);
         }
 
-        alert("Login Successful!");
+        // ✅ Replaced alert with toast
+        toast.success("Login Successful!");
         navigate("/dashboard"); 
       }
     } catch (err) {
