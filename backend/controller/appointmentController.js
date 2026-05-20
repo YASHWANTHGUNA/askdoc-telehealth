@@ -96,21 +96,46 @@ exports.updateAppointmentStatus = catchAsync(async (req, res, next) => {
 // DOCTOR: DASHBOARD STATS
 // ======================================
 
+// ======================================
+// DOCTOR: DASHBOARD STATS
+// ======================================
+
 exports.getDoctorStats = catchAsync(async (req, res, next) => {
+  // 1. Fetch all appointments for the logged-in doctor
   const appointments = await Appointment.find({
     doctorId: req.user.id,
   });
 
+  // 2. Calculate Unique Patients
   const uniquePatients = new Set(
-    appointments.map((appt) => appt.patientId.toString())
+    appointments.map((appt) => appt.patientId?.toString() || "")
   ).size;
 
+  // 3. Calculate Upcoming Appointments
+  const upcomingAppointments = appointments.filter(
+    (appt) => appt.status === "upcoming"
+  ).length;
+
+  // 4. Calculate Today's Appointments
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  
+  const endOfToday = new Date();
+  endOfToday.setHours(23, 59, 59, 999);
+
+  const todaysAppointments = appointments.filter((appt) => {
+    const apptDate = new Date(appt.date);
+    return apptDate >= startOfToday && apptDate <= endOfToday;
+  }).length;
+
+  // 5. Send the expanded stats back to the frontend
   res.status(200).json({
     status: "success",
     data: {
-      patients: uniquePatients,
-      appointments: appointments.length,
-      videoSessions: appointments.length,
+      totalPatients: uniquePatients,
+      totalAppointments: appointments.length,
+      todaysAppointments: todaysAppointments,
+      upcomingAppointments: upcomingAppointments,
     },
   });
 });
