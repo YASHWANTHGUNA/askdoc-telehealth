@@ -1,4 +1,4 @@
-import { Routes, Route, useNavigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import Home from './pages/Home';
 import SignUp from './pages/SignUp';
 import VerifyAccount from './pages/VerifyAccount';
@@ -12,17 +12,15 @@ import UserProfile from './pages/UserProfile';
 import MedicalHistory from './pages/MedicalHistory';
 
 // 🛑 NEW: The Guard Component
-const ProtectedRoute = ({ element: Component }) => {
-  const navigate = useNavigate();
+const ProtectedRoute = ({ element }) => {
   const token = localStorage.getItem("token");
 
-  // If no token exists, redirect to login
+  // If no token exists, redirect to login declaratively
   if (!token) {
-    navigate('/login');
-    return null; // Don't render the component
+    return <Navigate to="/login" replace />;
   }
 
-  return Component;
+  return element;
 };
 // 🛑 END NEW
 
