@@ -26,12 +26,12 @@ const Dashboard = () => {
        // FETCH APPOINTMENTS COUNT
       if (parsedUser.role === 'patient') {
           // ✅ FIX 3: Use parsedUser.id
-          api.get(`/appointments/my-appointments/${parsedUser.id}`)
-            .then(res => setApptCount(res.data.data.length))
+          api.get(`/appointments/my-appointments`)
+          .then(res => setApptCount(res.data.data.length))
             .catch(err => console.log(err));
         } else {
             // DOCTOR: Fetch Stats
-            api.get(`/appointments/doctor-stats/${parsedUser.name}`)
+            api.get(`/appointments/doctor-stats`)
               .then(res => setDoctorStats(res.data.data))
               .catch(err => console.log(err));
         }

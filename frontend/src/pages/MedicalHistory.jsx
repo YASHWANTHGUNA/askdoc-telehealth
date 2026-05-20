@@ -10,7 +10,7 @@ const MedicalHistory = () => {
   // Fetch History
   useEffect(() => {
     if (user) {
-      api.get(`/medical-history/${user.id}`)
+      api.get(`/medical-history`)
         .then(res => setRecords(res.data.data))
         .catch(err => console.log(err));
     }
@@ -21,7 +21,7 @@ const MedicalHistory = () => {
   const handleAdd = async () => {
     try {
       const res = await api.post("/medical-history", {
-        patientId: user.id,
+        
         condition: newCondition,
         description: newDesc
       });

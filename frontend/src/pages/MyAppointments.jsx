@@ -29,8 +29,8 @@ const MyAppointments = () => {
       try {
         // Use the safely determined userId for the API call
         const response = await api.get(
-          `/appointments/my-appointments/${userId}` 
-        );
+                 `/appointments/my-appointments`
+                );
         
         // The appointments are likely in response.data.data
         setAppointments(response.data.data);

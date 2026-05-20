@@ -24,12 +24,12 @@ const BookAppointment = () => {
 
   const handleBook = async (doctor) => {
     try {
-      await api.post(`/appointments/book`, {
-        patientId: user.id,
-        doctorName: doctor.name, // Saves your name!
-        specialty: doctor.specialty || "General",
-        date: new Date()
-      });
+        await api.post(`/appointments/book`, {
+            doctorId: doctor._id,
+              doctorName: doctor.name,
+            specialty: doctor.specialty || "General",
+              date: new Date()
+            });
       alert(`Booked with ${doctor.name}!`);
       navigate("/dashboard");
     } catch (err) {
