@@ -48,6 +48,11 @@ router.patch(
 
       let finalImageUrl = req.user.photo || "default";
 
+      // 👇 NEW: If frontend explicitly sends "default", it means "Remove Picture" was clicked
+      if (safeFields.photo === "default") {
+        finalImageUrl = "default";
+      }
+
       // ======================================
       // CLOUDINARY IMAGE UPLOAD
       // ======================================
@@ -141,4 +146,4 @@ router.get("/doctors", async (req, res) => {
   }
 });
 
-module.exports = router;// ... the rest of your route code remains exactly the same
+module.exports = router;
