@@ -1,38 +1,34 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../api/axiosInstance";
-import toast from "react-hot-toast"; // ✅ Added import
+import toast from "react-hot-toast"; 
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // ✅ Renamed to isLoading
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    setLoading(true);
+    setIsLoading(true); // ✅ Use new state name
 
     try {
-      // ✅ 1. Send Login Request to Render
       const res = await api.post(`/users/login`, {
         email,
         password,
       });
 
       if (res.data.status === "success") {
-        // 1. Save all necessary tokens
         localStorage.setItem("token", res.data.token);
         localStorage.setItem("user", JSON.stringify(res.data.user));
         
-        // 🛑 CRITICAL: SAVE THE STREAM TOKEN
         if (res.data.streamToken) {
             localStorage.setItem("streamToken", res.data.streamToken);
         }
 
-        // ✅ Replaced alert with toast
         toast.success("Login Successful!");
         navigate("/dashboard"); 
       }
@@ -42,7 +38,7 @@ const Login = () => {
         err.response?.data?.message || "Login failed. Check your email/password."
       );
     } finally {
-      setLoading(false);
+      setIsLoading(false); // ✅ Use new state name
     }
   };
 
@@ -96,10 +92,11 @@ const Login = () => {
 
           <button
             type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition"
+            disabled={isLoading} // ✅ Updated to isLoading
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition disabled:opacity-50"
           >
-            {loading ? "Signing In..." : "Sign In"}
+            {/* ✅ Updated text */}
+            {isLoading ? "Logging in..." : "Login"}
           </button>
         </form>
 

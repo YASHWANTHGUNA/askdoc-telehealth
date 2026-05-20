@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import api from "../api/axiosInstance";
+import toast from "react-hot-toast"; // ✅ Added toast
 
 const MedicalHistory = () => {
   const [records, setRecords] = useState([]);
@@ -21,16 +22,16 @@ const MedicalHistory = () => {
   const handleAdd = async () => {
     try {
       const res = await api.post("/medical-history", {
-        
         condition: newCondition,
         description: newDesc
       });
       setRecords([...records, res.data.data]); // Update list instantly
       setNewCondition("");
       setNewDesc("");
+      toast.success("Record added successfully!"); // ✅ Replaced alert
     } catch (err) {
       console.error("Error adding record:", err);
-      alert("Error adding record");
+      toast.error("Error adding record"); // ✅ Replaced alert
     }
   };
 
@@ -55,7 +56,7 @@ const MedicalHistory = () => {
               value={newDesc}
               onChange={(e) => setNewDesc(e.target.value)}
             />
-            <button onClick={handleAdd} className="bg-green-600 text-white px-6 rounded font-bold hover:bg-green-700">
+            <button onClick={handleAdd} className="bg-green-600 text-white px-6 rounded font-bold hover:bg-green-700 transition">
               Add
             </button>
           </div>
@@ -74,7 +75,10 @@ const MedicalHistory = () => {
               </span>
             </div>
           ))}
-          {records.length === 0 && <p className="text-center text-gray-500">No medical records found.</p>}
+          {/* ✅ Empty State */}
+          {records.length === 0 && (
+            <p className="text-center text-gray-500 mt-8">No medical records found.</p>
+          )}
         </div>
       </div>
     </div>

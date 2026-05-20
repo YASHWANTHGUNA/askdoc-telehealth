@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom"; // Import Link for 'Book Appointment' button
+import { Link, useNavigate } from "react-router-dom";
 import api from "../api/axiosInstance";
-import { format } from 'date-fns'; // Use date-fns for proper date display
+import { format } from 'date-fns';
 
 const MyAppointments = () => {
   const navigate = useNavigate();
@@ -10,15 +9,11 @@ const MyAppointments = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // 1. Get user data from localStorage (The reliable source)
   const storedUser = localStorage.getItem("user");
   const user = storedUser ? JSON.parse(storedUser) : null;
   
-
-
  useEffect(() => {
     const fetchAppointments = async () => {
-      // 🛑 CRITICAL FIX: Safely determine the ID and then check it
       const userId = user?.id || user?._id; 
 
       if (!userId) {
@@ -27,12 +22,7 @@ const MyAppointments = () => {
       }
       
       try {
-        // Use the safely determined userId for the API call
-        const response = await api.get(
-                 `/appointments/my-appointments`
-                );
-        
-        // The appointments are likely in response.data.data
+        const response = await api.get(`/appointments/my-appointments`);
         setAppointments(response.data.data);
         setError(null);
       } catch (err) {
@@ -44,7 +34,7 @@ const MyAppointments = () => {
     };
 
     fetchAppointments();
-  }, []); // Empty dependency array means it runs once on mount
+  }, []); 
 
   if (loading) return <div className="p-8 text-center text-lg">Loading appointments...</div>;
 
@@ -55,9 +45,10 @@ const MyAppointments = () => {
 
         {error && <p className="text-red-500 mb-4">{error}</p>}
         
+        {/* ✅ Empty State updated */}
         {appointments.length === 0 ? (
           <div className="bg-white p-6 rounded-xl text-center shadow-md">
-            <p className="text-lg text-gray-600">You currently have no upcoming appointments.</p>
+            <p className="text-center text-gray-500">No appointments booked yet.</p>
             <Link to="/book-appointment" className="text-blue-600 font-bold mt-2 inline-block underline">
               Book your first consultation.
             </Link>
@@ -74,7 +65,6 @@ const MyAppointments = () => {
                 </div>
                 <div className="text-right">
                   <p className="font-bold text-purple-600">
-                    {/* CRITICAL FIX: Use format function correctly */}
                     {format(new Date(appt.date), 'MMM do, yyyy @ h:mm a')}
                   </p>
                   <span className={`text-sm font-medium px-3 py-1 rounded-full mt-1 inline-block ${appt.status === 'upcoming' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>

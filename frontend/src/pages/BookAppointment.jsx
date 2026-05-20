@@ -1,15 +1,14 @@
-
 import React, { useState, useEffect } from "react";
 import api from "../api/axiosInstance";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast"; // ✅ Added toast
 
 const BookAppointment = () => {
   const [doctors, setDoctors] = useState([]);
+  const [isLoading, setIsLoading] = useState(false); // ✅ Added loading state
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user"));
 
-
-  // 👇 FETCH REAL DOCTORS
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
@@ -24,17 +23,20 @@ const BookAppointment = () => {
 
   const handleBook = async (doctor) => {
     try {
-        await api.post(`/appointments/book`, {
-            doctorId: doctor._id,
-              doctorName: doctor.name,
-            specialty: doctor.specialty || "General",
-              date: new Date()
-            });
-      alert(`Booked with ${doctor.name}!`);
+      setIsLoading(true); // ✅ Trigger loading
+      await api.post(`/appointments/book`, {
+        doctorId: doctor._id,
+        doctorName: doctor.name,
+        specialty: doctor.specialty || "General",
+        date: new Date()
+      });
+      toast.success(`Booked with ${doctor.name}!`); // ✅ Replaced alert
       navigate("/dashboard");
     } catch (err) {
       console.error("Booking failed:", err);
-      alert("Booking failed");
+      toast.error("Booking failed"); // ✅ Replaced alert
+    } finally {
+      setIsLoading(false); // ✅ Stop loading
     }
   };
 
@@ -63,9 +65,11 @@ const BookAppointment = () => {
 
               <button 
                 onClick={() => handleBook(doc)}
-                className="mt-4 bg-blue-600 text-white px-6 py-2 rounded-full font-bold hover:bg-blue-700 transition"
+                disabled={isLoading} // ✅ Disable while loading
+                className="mt-4 bg-blue-600 text-white px-6 py-2 rounded-full font-bold hover:bg-blue-700 transition disabled:opacity-50"
               >
-                Book Appointment
+                {/* ✅ Added dynamic text */}
+                {isLoading ? "Booking..." : "Book Appointment"}
               </button>
             </div>
           ))}

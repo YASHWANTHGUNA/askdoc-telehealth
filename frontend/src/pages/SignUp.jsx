@@ -1,25 +1,26 @@
-
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../api/axiosInstance";
+import toast from "react-hot-toast"; // ✅ Added toast
+
 const SignUp = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
-  const [role, setRole] = useState("patient"); // Default role
+  const [role, setRole] = useState("patient"); 
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // ✅ Renamed to isLoading
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    setLoading(true);
+    setIsLoading(true); // ✅ Updated variable
 
     if (password !== passwordConfirm) {
       setError("Passwords do not match!");
-      setLoading(false);
+      setIsLoading(false);
       return;
     }
 
@@ -33,9 +34,8 @@ const SignUp = () => {
       });
 
       if (res.data.status === "success") {
-        alert("Account Created Successfully! A verification code has been sent to your email.");
-        
-        // Navigate to the verification page, passing the email via state
+        // ✅ Replaced alert
+        toast.success("Account Created Successfully! Check your email.");
         navigate("/verify", { state: { email: email } });
       }
     } catch (err) {
@@ -46,7 +46,7 @@ const SignUp = () => {
         setError(err.response?.data?.message || "Signup failed. Try again.");
       }
     } finally {
-      setLoading(false);
+      setIsLoading(false); // ✅ Updated variable
     }
   };
 
@@ -79,7 +79,6 @@ const SignUp = () => {
             onChange={(e) => setEmail(e.target.value)}
           />
           
-          {/* Role Selection */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Account Type</label>
             <select
@@ -114,10 +113,11 @@ const SignUp = () => {
 
           <button
             type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition"
+            disabled={isLoading} // ✅ Disable when loading
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition disabled:opacity-50"
           >
-            {loading ? "Creating..." : "Sign Up"}
+            {/* ✅ Updated text */}
+            {isLoading ? "Creating Account..." : "Sign Up"}
           </button>
         </form>
 
