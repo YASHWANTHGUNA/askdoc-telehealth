@@ -39,12 +39,11 @@ const SignUp = () => {
         navigate("/verify", { state: { email: email } });
       }
     } catch (err) {
-      if (err.response && err.response.status === 400 && err.response.data?.message?.includes("E11000")) {
+      if (err.response && err.response.status === 400 && err.response.data?.message?.includes("Duplicate field")) {
         setError("This email is already registered. Please try signing in!");
-      } else {
-        console.error("Signup Error:", err);
-        setError(err.response?.data?.message || "Signup failed. Try again.");
-      }
+        } else {
+            setError(err.response?.data?.message || "Something went wrong! Please try again.");
+        }
     } finally {
       setIsLoading(false); // ✅ Updated variable
     }
