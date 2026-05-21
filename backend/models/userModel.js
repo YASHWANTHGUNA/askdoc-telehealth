@@ -19,7 +19,6 @@ const userSchema = new mongoose.Schema({
     enum: ["patient", "doctor"],
     default: "patient",
   },
-  // 👇 NEW FIELDS ADDED HERE
   phone: String,
   address: String,
   gender: String,
@@ -32,11 +31,26 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: "default" 
   },
-  specialty: String,       // e.g. Cardiologist
-  experience: String,      // e.g. 5 Years
-  consultationFee: Number, // e.g. 500
-  aboutDoctor: String,     // e.g. "Expert in heart surgery..."
-  // 👆 END NEW FIELDS
+  // Doctor Fields
+  specialty: String,
+  experience: String,
+  consultationFee: Number,
+  aboutDoctor: String,
+  
+  // 👇 NEW: Availability Fields
+  availableDays: { 
+    type: [String], 
+    default: [] 
+  },
+  startTime: { 
+    type: String, 
+    default: "09:00" 
+  },
+  endTime: { 
+    type: String, 
+    default: "17:00" 
+  },
+
   password: {
     type: String,
     required: [true, "Please provide a password"],
@@ -60,10 +74,11 @@ const userSchema = new mongoose.Schema({
   otpExpires: Date,
 });
 
-userSchema.pre("save", async function () {
-  if (!this.isModified("password")) return;
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next();
   this.password = await bcrypt.hash(this.password, 12);
   this.passwordConfirm = undefined;
+  next();
 });
 
 userSchema.methods.correctPassword = async function (candidatePassword, userPassword) {
@@ -71,4 +86,5 @@ userSchema.methods.correctPassword = async function (candidatePassword, userPass
 };
 
 const User = mongoose.model("User", userSchema);
+
 module.exports = User;

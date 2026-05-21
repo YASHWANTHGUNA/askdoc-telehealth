@@ -1,8 +1,8 @@
 // backend/routes/userRouter.js
 
 const express = require("express");
-const multer = require("multer"); // Added multer
-const cloudinary = require("cloudinary").v2; // Added cloudinary
+const multer = require("multer"); 
+const cloudinary = require("cloudinary").v2; 
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_NAME,
@@ -16,7 +16,6 @@ const User = require("../models/userModel");
 
 const router = express.Router();
 
-// Configure Multer to use memory storage
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
@@ -24,17 +23,15 @@ router.post("/signup", authController.signup);
 router.post("/verifyOTP", authController.verifyOTP);
 router.post("/login", authController.login);
 
-// Protected — user must be logged in, ID comes from token not body
 router.patch(
   "/update-profile",
   isAuthenticated,
-  upload.single("image"), // 'upload' is now defined above
+  upload.single("image"), 
   async (req, res) => {
     try {
       // ======================================
       // REMOVE SENSITIVE FIELDS
       // ======================================
-
       const {
         password,
         passwordConfirm,
@@ -42,13 +39,20 @@ router.patch(
         ...safeFields
       } = req.body;
 
+      // 👇 NEW: Parse the availableDays string back into a real Array safely
+      if (safeFields.availableDays && typeof safeFields.availableDays === "string") {
+        try {
+          safeFields.availableDays = JSON.parse(safeFields.availableDays);
+        } catch (e) {
+          safeFields.availableDays = []; // Fallback if parsing fails
+        }
+      }
+
       // ======================================
       // DEFAULT IMAGE
       // ======================================
-
       let finalImageUrl = req.user.photo || "default";
 
-      // 👇 NEW: If frontend explicitly sends "default", it means "Remove Picture" was clicked
       if (safeFields.photo === "default") {
         finalImageUrl = "default";
       }
@@ -56,30 +60,21 @@ router.patch(
       // ======================================
       // CLOUDINARY IMAGE UPLOAD
       // ======================================
-
       if (req.file) {
         const uploadStream = () =>
           new Promise((resolve, reject) => {
-            const stream = cloudinary.uploader.upload_stream( // 'cloudinary' is now defined
+            const stream = cloudinary.uploader.upload_stream( 
               {
                 folder: "askdoc_profiles",
-
                 transformation: [
-                  {
-                    width: 500,
-                    height: 500,
-                    crop: "fill",
-                    gravity: "face",
-                  },
+                  { width: 500, height: 500, crop: "fill", gravity: "face" },
                 ],
               },
-
               (error, result) => {
                 if (error) reject(error);
                 else resolve(result.secure_url);
               }
             );
-
             stream.end(req.file.buffer);
           });
 
@@ -89,33 +84,22 @@ router.patch(
       // ======================================
       // CLEAN EMPTY FIELDS
       // ======================================
-
-      if (
-        !safeFields.consultationFee ||
-        safeFields.consultationFee === "null"
-      ) {
+      if (!safeFields.consultationFee || safeFields.consultationFee === "null") {
         delete safeFields.consultationFee;
       }
-
-      if (
-        !safeFields.experience ||
-        safeFields.experience === "null"
-      ) {
+      if (!safeFields.experience || safeFields.experience === "null") {
         delete safeFields.experience;
       }
 
       // ======================================
       // UPDATE USER
       // ======================================
-
       const updatedUser = await User.findByIdAndUpdate(
         req.user.id,
-
         {
           ...safeFields,
           photo: finalImageUrl,
         },
-
         {
           new: true,
           runValidators: true,
@@ -128,7 +112,6 @@ router.patch(
       });
     } catch (err) {
       console.error("Profile Update Error:", err);
-
       res.status(400).json({
         status: "fail",
         message: err.message,
