@@ -1,7 +1,7 @@
-
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../api/axiosInstance";
+import { format, isToday } from "date-fns"; // ✅ Added for dynamic patient UI
 
 const Dashboard = () => {
   const [user, setUser] = useState({ name: "User", role: "patient" });
@@ -30,9 +30,13 @@ const Dashboard = () => {
         const parsedUser = JSON.parse(storedUser);
         setUser(parsedUser);
         
-      if (parsedUser.role === 'patient') {
+        if (parsedUser.role === 'patient') {
+          // ✅ PHASE 3 UPDATE: Now storing the full array so the Hero Card can read the dates
           api.get(`/appointments/my-appointments`)
-          .then(res => setApptCount(res.data.data.length))
+            .then(res => {
+              setApptCount(res.data.data.length);
+              setAppointments(res.data.data); 
+            })
             .catch(err => console.log(err));
         } else {
             // DOCTOR: Fetch Stats
@@ -70,31 +74,91 @@ const Dashboard = () => {
     });
   };
 
-  // 👇 PHASE 3 UPDATE: Checks if an appointment is starting within 15 mins or currently happening
+  // Checks if an appointment is starting within 15 mins or currently happening
   const isJoinable = (apptDate) => {
     const timeToAppt = new Date(apptDate).getTime() - new Date().getTime();
     const minutesToAppt = timeToAppt / (1000 * 60);
-    // True if appointment is within the next 15 minutes, or started within the last 60 mins
     return minutesToAppt <= 15 && minutesToAppt >= -60;
   };
 
-  const PatientView = () => (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-      <div className="bg-blue-50 p-6 rounded-xl border border-blue-100">
-        <h3 className="text-blue-800 font-bold mb-2">Find a Doctor</h3>
-        <Link to="/book-appointment"><button className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold">Search Doctors</button></Link>
+  // =========================================
+  // 👇 NEW PRODUCTION-GRADE PATIENT VIEW
+  // =========================================
+  const PatientView = () => {
+    // 1. Identify the absolute next upcoming appointment
+    const upcomingAppts = appointments
+      .filter(appt => appt.status === 'upcoming')
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+      
+    const nextAppointment = upcomingAppts.length > 0 ? upcomingAppts[0] : null;
+    const isApptToday = nextAppointment ? isToday(new Date(nextAppointment.date)) : false;
+
+    return (
+      <div className="space-y-8 animate-fade-in mb-8">
+        
+        {/* HERO: NEXT APPOINTMENT */}
+        {nextAppointment ? (
+          <div className={`rounded-3xl p-8 text-white flex flex-col md:flex-row justify-between items-center shadow-lg transition-all ${isApptToday ? 'bg-gradient-to-r from-blue-600 to-cyan-500' : 'bg-gray-800'}`}>
+            <div className="mb-6 md:mb-0 text-center md:text-left">
+              <span className="uppercase tracking-widest text-xs font-bold opacity-80 mb-2 block">
+                {isApptToday ? "🔴 Action Required Today" : "Upcoming Consultation"}
+              </span>
+              <h2 className="text-3xl font-bold mb-1">Dr. {nextAppointment.doctorName}</h2>
+              <p className="text-lg opacity-90">{nextAppointment.specialty} Specialist</p>
+              <div className="mt-4 flex items-center justify-center md:justify-start gap-2 bg-black/20 w-max px-4 py-2 rounded-full text-sm font-medium">
+                🗓️ {format(new Date(nextAppointment.date), 'MMM do, yyyy')} @ {format(new Date(nextAppointment.date), 'h:mm a')}
+              </div>
+            </div>
+            
+            <button 
+              onClick={() => navigate('/video', { state: { appointmentId: nextAppointment._id } })}
+              className={`px-8 py-4 rounded-full font-bold text-lg shadow-xl transition-transform hover:scale-105 ${isApptToday ? 'bg-white text-blue-600' : 'bg-white/10 text-white hover:bg-white/20 border border-white/20'}`}
+            >
+              {isApptToday ? "Join Video Call" : "Prepare for Call"}
+            </button>
+          </div>
+        ) : (
+          <div className="bg-blue-50 border border-blue-100 rounded-3xl p-8 flex flex-col items-center justify-center text-center shadow-sm">
+            <div className="text-4xl mb-4">👋</div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">You're all caught up!</h2>
+            <p className="text-gray-500 mb-6 max-w-md">You have no upcoming consultations. If you are feeling unwell, book an appointment with one of our specialists.</p>
+            <Link to="/book-appointment" className="bg-blue-600 text-white px-8 py-3 rounded-full font-bold shadow-md hover:bg-blue-700 transition">
+              Book a Consultation
+            </Link>
+          </div>
+        )}
+
+        {/* QUICK ACTIONS: BENTO GRID */}
+        <h3 className="text-xl font-bold text-gray-800 border-b pb-2">Quick Actions</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          
+          <Link to="/book-appointment" className="group bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all hover:border-blue-200 flex flex-col items-center text-center">
+            <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">
+              🩺
+            </div>
+            <h4 className="font-bold text-gray-800">Find a Doctor</h4>
+            <p className="text-sm text-gray-500 mt-1">Browse specialists and book</p>
+          </Link>
+
+          <Link to="/medical-history" className="group bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all hover:border-green-200 flex flex-col items-center text-center">
+            <div className="w-14 h-14 bg-green-50 text-green-600 rounded-full flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">
+              📋
+            </div>
+            <h4 className="font-bold text-gray-800">Medical Records</h4>
+            <p className="text-sm text-gray-500 mt-1">View your health history</p>
+          </Link>
+
+          <Link to="/my-appointments" className="group bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all hover:border-purple-200 flex flex-col items-center text-center">
+            <div className="w-14 h-14 bg-purple-50 text-purple-600 rounded-full flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">
+              📅
+            </div>
+            <h4 className="font-bold text-gray-800">All Appointments</h4>
+            <p className="text-sm text-gray-500 mt-1">Manage scheduled visits</p>
+          </Link>
+        </div>
       </div>
-      <div className="bg-purple-50 p-6 rounded-xl border border-purple-100">
-        <h3 className="text-purple-800 font-bold mb-2">My Appointments</h3>
-        <p className="text-4xl font-bold text-purple-600 mb-2">{apptCount}</p>
-        <Link to="/my-appointments" className="text-purple-700 underline font-bold text-sm">View Schedule</Link>
-      </div>
-      <div className="bg-green-50 p-6 rounded-xl border border-green-100">
-        <h3 className="text-green-800 font-bold mb-2">Medical History</h3>
-        <Link to="/medical-history" className="text-green-700 underline font-bold text-sm">View Records</Link>
-      </div>
-    </div>
-  );
+    );
+  };
 
   const DoctorView = () => {
     const filteredAppointments = getFilteredAppointments();
@@ -162,7 +226,6 @@ const Dashboard = () => {
                       </p>
                     </div>
                     
-                    {/* 👇 PHASE 3 UPDATE: Conditional Join Button Block */}
                     <div className="flex flex-col items-end gap-2">
                       <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${
                         appt.status === 'upcoming' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'
@@ -184,6 +247,12 @@ const Dashboard = () => {
               </ul>
             )}
           </div>
+        </div>
+
+        {/* Doctor-only bottom CTA */}
+        <div className="bg-blue-600 rounded-2xl p-8 text-white flex justify-between items-center mt-8 shadow-sm">
+          <div><h2 className="text-2xl font-bold">Telehealth Session</h2><p className="text-blue-100 mt-1">Start a secure video call.</p></div>
+          <Link to="/video" className="bg-white text-blue-600 px-6 py-3 rounded-lg font-bold hover:bg-blue-50 transition-colors">Start Video Call</Link>
         </div>
       </>
     );
@@ -215,10 +284,6 @@ const Dashboard = () => {
 
         {user.role === 'patient' ? <PatientView /> : <DoctorView />}
 
-        <div className="bg-blue-600 rounded-2xl p-8 text-white flex justify-between items-center mt-8 shadow-sm">
-          <div><h2 className="text-2xl font-bold">Telehealth Session</h2><p className="text-blue-100 mt-1">Start a secure video call.</p></div>
-          <Link to="/video" className="bg-white text-blue-600 px-6 py-3 rounded-lg font-bold hover:bg-blue-50 transition-colors">{user.role === 'patient' ? "Join Waiting Room" : "Start Video Call"}</Link>
-        </div>
       </main>
     </div>
   );
