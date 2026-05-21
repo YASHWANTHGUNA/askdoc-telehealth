@@ -96,10 +96,6 @@ exports.updateAppointmentStatus = catchAsync(async (req, res, next) => {
 // DOCTOR: DASHBOARD STATS
 // ======================================
 
-// ======================================
-// DOCTOR: DASHBOARD STATS
-// ======================================
-
 exports.getDoctorStats = catchAsync(async (req, res, next) => {
   // 1. Fetch all appointments for the logged-in doctor
   const appointments = await Appointment.find({
@@ -137,5 +133,36 @@ exports.getDoctorStats = catchAsync(async (req, res, next) => {
       todaysAppointments: todaysAppointments,
       upcomingAppointments: upcomingAppointments,
     },
+  });
+}); 
+
+// ======================================
+// 👇 NEW: DOCTOR: SAVE CLINICAL NOTES
+// ======================================
+
+exports.updateNotes = catchAsync(async (req, res, next) => {
+  const { appointmentId } = req.params;
+  const { notes } = req.body;
+
+  const appointment = await Appointment.findOneAndUpdate(
+    {
+      _id: appointmentId,
+      // Optional extra security: ensure the doctor updating notes actually owns this appointment
+      // doctorId: req.user.id, 
+    },
+    { notes },
+    {
+      new: true, // Returns the updated document
+      runValidators: true,
+    }
+  );
+
+  if (!appointment) {
+    return next(new AppError("Appointment not found", 404));
+  }
+
+  res.status(200).json({
+    status: "success",
+    data: appointment,
   });
 });

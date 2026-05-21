@@ -5,7 +5,10 @@ const appointmentSchema = new mongoose.Schema({
   doctorName: { type: String, required: true },
   specialty: String,
   date: { type: Date, default: Date.now },
-  status: { type: String, enum: ["upcoming", "completed"], default: "upcoming" }
+  status: { type: String, enum: ["upcoming", "completed"], default: "upcoming" },
+  
+  // 👇 NEW: Field to store the doctor's clinical notes
+  notes: { type: String, default: "" } 
 });
 
 const Appointment = mongoose.model("Appointment", appointmentSchema);

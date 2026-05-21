@@ -5,50 +5,22 @@ const restrictTo = require("../middlewares/restrictTo");
 
 const router = express.Router();
 
-// 🔒 Protect ALL appointment routes
 router.use(isAuthenticated);
 
 // ==============================
 // PATIENT ROUTES
 // ==============================
-
-// Book appointment securely
-router.post(
-  "/book",
-  restrictTo("patient"),
-  appointmentController.createAppointment
-);
-
-// Get logged-in patient's appointments
-router.get(
-  "/my-appointments",
-  restrictTo("patient"),
-  appointmentController.getMyAppointments
-);
+router.post("/book", restrictTo("patient"), appointmentController.createAppointment);
+router.get("/my-appointments", restrictTo("patient"), appointmentController.getMyAppointments);
 
 // ==============================
 // DOCTOR ROUTES
 // ==============================
+router.get("/", restrictTo("doctor"), appointmentController.getDoctorAppointments);
+router.patch("/:appointmentId/status", restrictTo("doctor"), appointmentController.updateAppointmentStatus);
+router.get("/doctor-stats", restrictTo("doctor"), appointmentController.getDoctorStats);
 
-// Get doctor's own appointments
-router.get(
-  "/",
-  restrictTo("doctor"),
-  appointmentController.getDoctorAppointments
-);
-
-// Update appointment status
-router.patch(
-  "/:appointmentId/status",
-  restrictTo("doctor"),
-  appointmentController.updateAppointmentStatus
-);
-
-// Doctor dashboard statistics
-router.get(
-  "/doctor-stats",
-  restrictTo("doctor"),
-  appointmentController.getDoctorStats
-);
+// 👇 NEW: Route specifically for saving clinical notes
+router.patch("/:appointmentId/notes", restrictTo("doctor"), appointmentController.updateNotes);
 
 module.exports = router;
