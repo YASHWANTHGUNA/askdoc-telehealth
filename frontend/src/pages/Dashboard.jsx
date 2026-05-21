@@ -1,7 +1,9 @@
+
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../api/axiosInstance";
-import { format, isToday } from "date-fns"; // ✅ Added for dynamic patient UI
+import { format, isToday } from "date-fns";
+import toast from "react-hot-toast";
 
 const Dashboard = () => {
   const [user, setUser] = useState({ name: "User", role: "patient" });
@@ -31,7 +33,6 @@ const Dashboard = () => {
         setUser(parsedUser);
         
         if (parsedUser.role === 'patient') {
-          // ✅ PHASE 3 UPDATE: Now storing the full array so the Hero Card can read the dates
           api.get(`/appointments/my-appointments`)
             .then(res => {
               setApptCount(res.data.data.length);
@@ -58,13 +59,14 @@ const Dashboard = () => {
     navigate("/login");
   };
 
+  // ✅ UPDATED: Added Chronological Sorting
   const getFilteredAppointments = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    return appointments.filter((appt) => {
+    const filtered = appointments.filter((appt) => {
       const apptDate = new Date(appt.date);
       if (activeTab === "today") {
         return apptDate >= today && apptDate < tomorrow;
@@ -72,6 +74,9 @@ const Dashboard = () => {
         return apptDate >= tomorrow || appt.status === "upcoming";
       }
     });
+
+    // Sort strictly by time (earliest first)
+    return filtered.sort((a, b) => new Date(a.date) - new Date(b.date));
   };
 
   // Checks if an appointment is starting within 15 mins or currently happening
@@ -81,11 +86,27 @@ const Dashboard = () => {
     return minutesToAppt <= 15 && minutesToAppt >= -60;
   };
 
+  // ✅ NEW: Doctor action to mark appointment as completed instantly without refresh
+  const handleMarkCompleted = async (apptId) => {
+    try {
+      await api.patch(`/appointments/${apptId}/status`, { status: "completed" });
+      
+      // Instantly update the local state to remove it from the 'upcoming' flow
+      setAppointments(prev => prev.map(appt => 
+        appt._id === apptId ? { ...appt, status: "completed" } : appt
+      ));
+      
+      toast.success("Appointment marked as completed!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to update appointment status.");
+    }
+  };
+
   // =========================================
-  // 👇 NEW PRODUCTION-GRADE PATIENT VIEW
+  // PATIENT VIEW
   // =========================================
   const PatientView = () => {
-    // 1. Identify the absolute next upcoming appointment
     const upcomingAppts = appointments
       .filter(appt => appt.status === 'upcoming')
       .sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -95,8 +116,6 @@ const Dashboard = () => {
 
     return (
       <div className="space-y-8 animate-fade-in mb-8">
-        
-        {/* HERO: NEXT APPOINTMENT */}
         {nextAppointment ? (
           <div className={`rounded-3xl p-8 text-white flex flex-col md:flex-row justify-between items-center shadow-lg transition-all ${isApptToday ? 'bg-gradient-to-r from-blue-600 to-cyan-500' : 'bg-gray-800'}`}>
             <div className="mb-6 md:mb-0 text-center md:text-left">
@@ -128,30 +147,20 @@ const Dashboard = () => {
           </div>
         )}
 
-        {/* QUICK ACTIONS: BENTO GRID */}
         <h3 className="text-xl font-bold text-gray-800 border-b pb-2">Quick Actions</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          
           <Link to="/book-appointment" className="group bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all hover:border-blue-200 flex flex-col items-center text-center">
-            <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">
-              🩺
-            </div>
+            <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">🩺</div>
             <h4 className="font-bold text-gray-800">Find a Doctor</h4>
             <p className="text-sm text-gray-500 mt-1">Browse specialists and book</p>
           </Link>
-
           <Link to="/medical-history" className="group bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all hover:border-green-200 flex flex-col items-center text-center">
-            <div className="w-14 h-14 bg-green-50 text-green-600 rounded-full flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">
-              📋
-            </div>
+            <div className="w-14 h-14 bg-green-50 text-green-600 rounded-full flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">📋</div>
             <h4 className="font-bold text-gray-800">Medical Records</h4>
             <p className="text-sm text-gray-500 mt-1">View your health history</p>
           </Link>
-
           <Link to="/my-appointments" className="group bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all hover:border-purple-200 flex flex-col items-center text-center">
-            <div className="w-14 h-14 bg-purple-50 text-purple-600 rounded-full flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">
-              📅
-            </div>
+            <div className="w-14 h-14 bg-purple-50 text-purple-600 rounded-full flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">📅</div>
             <h4 className="font-bold text-gray-800">All Appointments</h4>
             <p className="text-sm text-gray-500 mt-1">Manage scheduled visits</p>
           </Link>
@@ -160,12 +169,18 @@ const Dashboard = () => {
     );
   };
 
+  // =========================================
+  // DOCTOR VIEW
+  // =========================================
   const DoctorView = () => {
     const filteredAppointments = getFilteredAppointments();
+    
+    // Identify the absolute next upcoming appointment for today to highlight it
+    const todayUpcoming = filteredAppointments.filter(appt => appt.status === 'upcoming' && isToday(new Date(appt.date)));
+    const nextImmediateApptId = todayUpcoming.length > 0 ? todayUpcoming[0]._id : null;
 
     return (
       <>
-        {/* Quick Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
             <p className="text-gray-500 text-sm font-medium">Today's Consultations</p>
@@ -185,9 +200,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Segmented Tabs & Appointment List */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          {/* Tabs */}
           <div className="flex border-b border-gray-100">
             <button
               onClick={() => setActiveTab("today")}
@@ -207,7 +220,6 @@ const Dashboard = () => {
             </button>
           </div>
 
-          {/* List */}
           <div>
             {filteredAppointments.length === 0 ? (
               <div className="p-8 text-center text-gray-500 font-medium">
@@ -215,41 +227,57 @@ const Dashboard = () => {
               </div>
             ) : (
               <ul className="divide-y divide-gray-100">
-                {filteredAppointments.map((appt) => (
-                  <li key={appt._id} className="p-6 flex justify-between items-center hover:bg-gray-50 transition-colors">
-                    <div>
-                      <p className="font-bold text-gray-800 text-lg">
-                        {appt.patientId?.name || "Patient"}
-                      </p>
-                      <p className="text-sm text-gray-500 mt-1">
-                        {new Date(appt.date).toLocaleDateString()} at {new Date(appt.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </p>
-                    </div>
-                    
-                    <div className="flex flex-col items-end gap-2">
-                      <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${
-                        appt.status === 'upcoming' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'
-                      }`}>
-                        {appt.status}
-                      </span>
+                {filteredAppointments.map((appt) => {
+                  const isNext = appt._id === nextImmediateApptId && activeTab === "today";
+                  
+                  return (
+                    <li key={appt._id} className={`p-6 flex flex-col md:flex-row justify-between md:items-center transition-colors ${isNext ? 'bg-blue-50/40 border-l-4 border-blue-500' : 'hover:bg-gray-50'}`}>
+                      <div className="mb-4 md:mb-0">
+                        {isNext && <span className="text-[10px] uppercase font-bold text-blue-600 tracking-wider mb-1 block">🔴 Next Appointment</span>}
+                        <p className="font-bold text-gray-800 text-lg">
+                          {appt.patientId?.name || "Patient"}
+                        </p>
+                        <p className="text-sm text-gray-500 mt-1">
+                          {format(new Date(appt.date), 'MMM do, yyyy')} at {format(new Date(appt.date), 'h:mm a')}
+                        </p>
+                      </div>
                       
-                      {appt.status === 'upcoming' && activeTab === "today" && isJoinable(appt.date) && (
-                        <Link 
-                          to="/video" 
-                          className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md hover:bg-green-700 transition-colors animate-pulse"
-                        >
-                          Join Call Now
-                        </Link>
-                      )}
-                    </div>
-                  </li>
-                ))}
+                      <div className="flex items-center gap-3">
+                        <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${
+                          appt.status === 'upcoming' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'
+                        }`}>
+                          {appt.status}
+                        </span>
+                        
+                        {/* ✅ UPDATED: Added Mark Completed Button & Contextual Actions */}
+                        {appt.status === 'upcoming' && (
+                          <div className="flex gap-2">
+                            <button 
+                              onClick={() => handleMarkCompleted(appt._id)}
+                              className="border border-gray-300 text-gray-600 hover:bg-gray-100 px-3 py-1.5 rounded-lg text-sm font-bold transition-colors"
+                            >
+                              ✓ Done
+                            </button>
+
+                            {activeTab === "today" && isJoinable(appt.date) && (
+                              <button 
+                                onClick={() => navigate('/video', { state: { appointmentId: appt._id } })}
+                                className="bg-green-600 text-white px-4 py-1.5 rounded-lg text-sm font-bold shadow-sm hover:bg-green-700 transition-colors animate-pulse"
+                              >
+                                Join Call
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </div>
         </div>
 
-        {/* Doctor-only bottom CTA */}
         <div className="bg-blue-600 rounded-2xl p-8 text-white flex justify-between items-center mt-8 shadow-sm">
           <div><h2 className="text-2xl font-bold">Telehealth Session</h2><p className="text-blue-100 mt-1">Start a secure video call.</p></div>
           <Link to="/video" className="bg-white text-blue-600 px-6 py-3 rounded-lg font-bold hover:bg-blue-50 transition-colors">Start Video Call</Link>
