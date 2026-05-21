@@ -22,7 +22,7 @@ const UserProfile = () => {
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
 
-  // 👇 NEW STATES for Searchable Dropdown
+  // ✅ NEW STATES for Searchable Dropdown
   const [specialtySearch, setSpecialtySearch] = useState("");
   const [showSpecialtyDropdown, setShowSpecialtyDropdown] = useState(false);
 
@@ -37,7 +37,7 @@ const UserProfile = () => {
     experience: "",
     consultationFee: "",
     aboutDoctor: "",
-    // 👇 NEW: Availability Fields
+    // ✅ NEW: Availability Fields
     availableDays: [], 
     startTime: "",
     endTime: ""
@@ -82,7 +82,7 @@ const UserProfile = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // 👇 NEW: Toggle day selection for Availability
+  // ✅ NEW: Toggle day selection for Availability
   const toggleDay = (day) => {
     const currentDays = formData.availableDays || [];
     if (currentDays.includes(day)) {
@@ -245,7 +245,7 @@ const UserProfile = () => {
                 <h2 className="text-xl font-bold text-gray-800 mb-4 border-l-4 border-green-500 pl-3">Professional Credentials</h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-green-50/30 p-6 rounded-xl border border-green-100">
                   
-                  {/* 👇 IMPROVISED: Searchable Dropdown */}
+                  {/* ✅ IMPROVISED: Searchable Dropdown */}
                   <div className="relative">
                     <label className="block font-bold mb-2 text-gray-700 text-sm">Medical Specialty</label>
                     <input 
@@ -297,7 +297,7 @@ const UserProfile = () => {
                 </div>
               </section>
 
-              {/* 👇 NEW: Availability & Time Slots */}
+              {/* ✅ NEW: Availability & Time Slots */}
               <section>
                 <h2 className="text-xl font-bold text-gray-800 mb-4 border-l-4 border-purple-500 pl-3">Availability & Time Slots</h2>
                 <div className="bg-purple-50/30 p-6 rounded-xl border border-purple-100">
