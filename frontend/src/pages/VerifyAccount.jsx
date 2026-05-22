@@ -1,17 +1,18 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import api from "../api/axiosInstance";
+import toast from "react-hot-toast";
 
 const VerifyAccount = () => {
   const [otp, setOtp] = useState("");
-  const [email, setEmail] = useState(""); // We will get this from the previous page
+  const [email, setEmail] = useState(""); 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Auto-fill email if passed from SignUp page
   useEffect(() => {
     if (location.state && location.state.email) {
       setEmail(location.state.email);
@@ -24,15 +25,13 @@ const VerifyAccount = () => {
     setError("");
 
     try {
-      // ✅ Using the Render URL instead of localhost
       const res = await api.post(`/users/verifyOTP`, {
         email,
         otp,
       });
 
       if (res.data.status === "success") {
-        alert("Verification Successful! Logging you in...");
-        // Redirect to Dashboard or Login
+        toast.success("Verification Successful! Logging you in...");
         navigate("/login"); 
       }
     } catch (err) {
@@ -44,7 +43,7 @@ const VerifyAccount = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
       <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
         <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">
           Verify Account
@@ -64,7 +63,7 @@ const VerifyAccount = () => {
             type="email"
             placeholder="Your Email"
             required
-            className="w-full px-4 py-3 rounded-lg border border-gray-300 outline-none"
+            className="w-full px-4 py-3 rounded-lg border border-gray-300 outline-none focus:ring-2 focus:ring-blue-500 transition-all"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
@@ -73,7 +72,7 @@ const VerifyAccount = () => {
             placeholder="Enter 6-digit OTP"
             required
             maxLength="6"
-            className="w-full px-4 py-3 rounded-lg border border-gray-300 outline-none text-center text-2xl tracking-widest"
+            className="w-full px-4 py-3 rounded-lg border border-gray-300 outline-none text-center text-2xl tracking-widest focus:ring-2 focus:ring-blue-500 transition-all font-mono"
             value={otp}
             onChange={(e) => setOtp(e.target.value)}
           />
@@ -81,9 +80,9 @@ const VerifyAccount = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition-all disabled:opacity-50 shadow-md"
           >
-            {loading ? "Verifying..." : "Verify Code"}
+            {loading ? "Verifying..." : "Verify OTP"}
           </button>
         </form>
       </div>
