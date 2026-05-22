@@ -11,6 +11,19 @@ const SPECIALTY_OPTIONS = [
   "Orthopedist", "Pediatrician", "Psychiatrist", "Radiologist", "Urologist"
 ];
 
+// ✅ NEW: Helper function to calculate age dynamically
+const calculateAge = (dobString) => {
+  if (!dobString) return "";
+  const today = new Date();
+  const birthDate = new Date(dobString);
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const m = today.getMonth() - birthDate.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  return age;
+};
+
 const UserProfile = () => {
   const [user, setUser] = useState({});
   const [preview, setPreview] = useState(null);
@@ -22,13 +35,14 @@ const UserProfile = () => {
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
 
-  // ✅ NEW STATES for Searchable Dropdown
+  // STATES for Searchable Dropdown
   const [specialtySearch, setSpecialtySearch] = useState("");
   const [showSpecialtyDropdown, setShowSpecialtyDropdown] = useState(false);
 
   const [formData, setFormData] = useState({
     phone: "",
     address: "",
+    dob: "", // ✅ NEW: Added dob state
     bloodGroup: "",
     height: "",
     weight: "",
@@ -37,7 +51,7 @@ const UserProfile = () => {
     experience: "",
     consultationFee: "",
     aboutDoctor: "",
-    // ✅ NEW: Availability Fields
+    // Availability Fields
     availableDays: [], 
     startTime: "",
     endTime: ""
@@ -58,9 +72,16 @@ const UserProfile = () => {
           : storedUser.availableDays || [];
       } catch (e) { parsedDays = []; }
 
+      // ✅ Safely format DOB for the HTML input (YYYY-MM-DD)
+      let formattedDob = "";
+      if (storedUser.dob) {
+        formattedDob = new Date(storedUser.dob).toISOString().split('T')[0];
+      }
+
       setFormData({
         phone: storedUser.phone || "",
         address: storedUser.address || "",
+        dob: formattedDob, // ✅ NEW: Mapped the formatted DOB
         bloodGroup: storedUser.bloodGroup || "",
         height: storedUser.height || "",
         weight: storedUser.weight || "",
@@ -82,7 +103,7 @@ const UserProfile = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // ✅ NEW: Toggle day selection for Availability
+  // Toggle day selection for Availability
   const toggleDay = (day) => {
     const currentDays = formData.availableDays || [];
     if (currentDays.includes(day)) {
@@ -221,6 +242,21 @@ const UserProfile = () => {
             <section>
               <h2 className="text-xl font-bold text-gray-800 mb-4 border-l-4 border-blue-500 pl-3">Medical Profile</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-blue-50/50 p-6 rounded-xl border border-blue-100">
+                
+                {/* ✅ NEW: DOB and Auto-Calculated Age */}
+                <div>
+                  <label className="block font-bold mb-2 text-gray-700 text-sm">
+                    Date of Birth {formData.dob && <span className="text-blue-600 ml-2">({calculateAge(formData.dob)} years old)</span>}
+                  </label>
+                  <input 
+                    type="date" 
+                    name="dob" 
+                    value={formData.dob} 
+                    onChange={handleChange} 
+                    className="w-full p-3 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 bg-white" 
+                  />
+                </div>
+
                 <div>
                   <label className="block font-bold mb-2 text-gray-700 text-sm">Blood Group</label>
                   <input name="bloodGroup" value={formData.bloodGroup} onChange={handleChange} placeholder="e.g., O+" className="w-full p-3 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 bg-white" />
@@ -245,7 +281,7 @@ const UserProfile = () => {
                 <h2 className="text-xl font-bold text-gray-800 mb-4 border-l-4 border-green-500 pl-3">Professional Credentials</h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-green-50/30 p-6 rounded-xl border border-green-100">
                   
-                  {/* ✅ IMPROVISED: Searchable Dropdown */}
+                  {/* Searchable Dropdown */}
                   <div className="relative">
                     <label className="block font-bold mb-2 text-gray-700 text-sm">Medical Specialty</label>
                     <input 
@@ -297,7 +333,7 @@ const UserProfile = () => {
                 </div>
               </section>
 
-              {/* ✅ NEW: Availability & Time Slots */}
+              {/* Availability & Time Slots */}
               <section>
                 <h2 className="text-xl font-bold text-gray-800 mb-4 border-l-4 border-purple-500 pl-3">Availability & Time Slots</h2>
                 <div className="bg-purple-50/30 p-6 rounded-xl border border-purple-100">
